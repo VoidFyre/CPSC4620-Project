@@ -1,4 +1,23 @@
-CREATE TABLE customer_order (
+USE Project;
+
+CREATE TABLE IF NOT EXISTS base (
+    SizeID VARCHAR(20) NOT NULL,
+    CrustID VARCHAR(20) NOT NULL,
+    BasePrice INT NOT NULL,
+    BaseCost INT NOT NULL,
+    PRIMARY KEY (SizeID, CrustID)
+); 
+
+CREATE TABLE IF NOT EXISTS customer (
+	CustomerID INT NOT NULL AUTO_INCREMENT,
+	CustomerFirstName VARCHAR(20) NOT NULL,
+    CustomerLastName VARCHAR(20) NOT NULL,
+    CustomerPhone VARCHAR(20) NOT NULL,
+    CustomerAddress VARCHAR(20),
+    PRIMARY KEY (CustomerID)
+);
+
+CREATE TABLE IF NOT EXISTS customer_order (
 	OrderID INT NOT NULL AUTO_INCREMENT,
     CustomerID INT NOT NULL,
     OrderType INT NOT NULL,
@@ -9,16 +28,21 @@ CREATE TABLE customer_order (
     FOREIGN KEY (CustomerID) REFERENCES customer(CustomerID)
 );
 
-CREATE TABLE customer (
-	CustomerID INT NOT NULL AUTO_INCREMENT,
-	CustomerFirstName VARCHAR(20) NOT NULL,
-    CustomerLastName VARCHAR(20) NOT NULL,
-    CustomerPhone VARCHAR(20) NOT NULL,
-    CustomerAddress VARCHAR(20),
-    PRIMARY KEY (CustomerID)
+CREATE TABLE IF NOT EXISTS pizza (
+    PizzaID INT NOT NULL AUTO_INCREMENT,
+    CrustID VARCHAR(20) NOT NULL,
+    SizeID VARCHAR(20) NOT NULL,
+    OrderID INT NOT NULL,
+    PizzaCost INT NOT NULL,
+    PizzaPrice INT NOT NULL,
+    PizzaDate DATE NOT NULL,
+    PizzaComplete BOOL NOT NULL,
+    PRIMARY KEY (PizzaID),
+    FOREIGN KEY (SizeID, CrustID) REFERENCES base(SizeID, CrustID),
+    FOREIGN KEY (OrderID) REFERENCES customer_order(OrderID)
 );
 
-CREATE TABLE discount (
+CREATE TABLE IF NOT EXISTS discount (
 	DiscountID INT NOT NULL AUTO_INCREMENT,
     DiscountName VARCHAR(20) NOT NULL,
     DiscountType VARCHAR(20) NOT NULL,
@@ -27,7 +51,7 @@ CREATE TABLE discount (
     PRIMARY KEY (DiscountID)
 );
 
-CREATE TABLE discount_order (
+CREATE TABLE IF NOT EXISTS discount_order (
 	OrderID INT NOT NULL,
     DiscountID INT NOT NULL,
     PRIMARY KEY (OrderID, DiscountID),
@@ -35,7 +59,7 @@ CREATE TABLE discount_order (
     FOREIGN KEY (DiscountID) REFERENCES discount(DiscountID)
 );
 
-CREATE TABLE discount_pizza (
+CREATE TABLE IF NOT EXISTS discount_pizza (
 	PizzaID INT NOT NULL,
     DiscountID INT NOT NULL,
     PRIMARY KEY (PizzaID, DiscountID),
@@ -43,7 +67,7 @@ CREATE TABLE discount_pizza (
     FOREIGN KEY (DiscountID) REFERENCES discount(DiscountID)
 );
 
-CREATE TABLE topping (
+CREATE TABLE IF NOT EXISTS topping (
 	ToppingID INT NOT NULL AUTO_INCREMENT,
     ToppingName VARCHAR(20) NOT NULL,
     ToppingPrice INT NOT NULL,
@@ -57,7 +81,7 @@ CREATE TABLE topping (
     PRIMARY KEY (ToppingID)
 );
 
-CREATE TABLE pizza_topping (
+CREATE TABLE IF NOT EXISTS pizza_topping (
 	PizzaID INT NOT NULL,
     ToppingID INT NOT NULL,
     PRIMARY KEY (PizzaID, ToppingID),
@@ -65,26 +89,3 @@ CREATE TABLE pizza_topping (
     FOREIGN KEY (ToppingID) REFERENCES topping(ToppingID)
 );
 
-CREATE TABLE pizza (
-    PizzaID INT NOT NULL AUTO_INCREMENT,
-    CrustID VARCHAR(20),
-    SizeID VARCHAR(20),
-    OrderID INT,
-    PizzaCost INT,
-    PizzaPrice INT,
-    PizzaDate DATE,
-    PizzaComplete BOOL,
-    PRIMARY KEY (PizzaID),
-    FOREIGN KEY (CrustID) REFERENCES base(CrustID),
-    FOREIGN KEY (SizeID) REFERENCES base(SizeID),
-    FOREIGN KEY (OrderID) REFERENCES customer_order(OrderID)
-);
-
-CREATE TABLE base (
-    SizeID VARCHAR(20),
-    CrustID VARCHAR(20),
-    BasePrice INT,
-    BaseCost INT,
-    PRIMARY KEY (SizeID),
-    PRIMARY KEY (CrustID)
-); 
