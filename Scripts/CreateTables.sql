@@ -12,7 +12,7 @@ CREATE TABLE IF NOT EXISTS customer (
 	CustomerID INT NOT NULL AUTO_INCREMENT,
 	CustomerFirstName VARCHAR(20) NOT NULL,
     CustomerLastName VARCHAR(20) NOT NULL,
-    CustomerPhone VARCHAR(20) NOT NULL,
+    CustomerPhone VARCHAR(20) NOT NULL UNIQUE,
     CustomerAddress VARCHAR(100),
     PRIMARY KEY (CustomerID)
 );

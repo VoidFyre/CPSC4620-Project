@@ -56,24 +56,19 @@ INSERT INTO discount
 -- 		('Frank', 'Turner', '864-232-8944', '6745 Wessex St, Anderson SC 29621'),
 -- 		('Milo', 'Auckerman', '864-878-5679', '8879 Suburban Home, Anderson SC 29621');
         
+        
+-- ORDER 1
+        
 INSERT INTO customer_order
 	(CustomerID, OrderType, OrderTime, OrderPrice, OrderCost, OrderComplete, OrderTableNumber)
     VALUES
 		(null, 'dine-in', '2022-03-05 12:03:00', 0, 0, 1, 14);
         
-INSERT INTO pizza
-	(CrustID, SizeID, OrderID, PizzaPrice, PizzaCost, PizzaDate, PizzaComplete)
-	VALUES(
-		'Thin',
-        'large',
-        (SELECT MAX(OrderID)
-        FROM customer_order),
-        0,
-        0,
-        (SELECT CONVERT(OrderTime, DATE) as PizzaDate
-        FROM customer_order
-        WHERE OrderID = (SELECT MAX(OrderID) FROM customer_order)),
-        1);
+CALL ADDPIZZA(
+	(SELECT MAX(OrderID) FROM customer_order),
+    'Thin',
+    'large'
+    );
         
 INSERT INTO pizza_topping
 	(PizzaID, ToppingID, PizzaToppingExtra)
@@ -91,59 +86,7 @@ INSERT INTO pizza_topping
         'Sausage',
         0);
         
-UPDATE pizza
-SET PizzaPrice = (
-	SELECT
-	BasePrice + ToppingPriceTotal - DiscountTotal AS PizzaPrice
-	FROM 
-		(SELECT
-			SUM((ToppingPrice * (1 + pizza_topping.PizzaToppingExtra))) AS ToppingPriceTotal,
-			(SELECT
-				BasePrice
-				FROM
-					base,
-					pizza
-				WHERE pizza.CrustID = base.CrustID AND pizza.SizeID = base.SizeID
-			) AS BasePrice
-		FROM 
-			topping,
-			pizza_topping
-		WHERE
-			pizza_topping.ToppingID = topping.ToppingID AND PizzaID = (SELECT MAX(PizzaID) FROM pizza)
-		) AS pizzaTemp,
-		(SELECT
-			COALESCE(SUM(DiscountAmount), 0) AS DiscountTotal
-		FROM discount_pizza, pizza, discount
-		WHERE discount.DiscountID = discount_pizza.DiscountID AND pizza.PizzaID = discount_pizza.PizzaID AND pizza.PizzaID = (SELECT MAX(pizza.PizzaID) FROM pizza)
-		) AS discountTemp
-    ),
-    PizzaCost = (SELECT
-    BaseCost + ToppingCostTotal AS PizzaCost
-FROM 
-	(
-		SELECT
-			CASE pizza.SizeID 
-				WHEN 'small' THEN ROUND(SUM(((ToppingCost * (1 + pizza_topping.PizzaToppingExtra)) * topping.ToppingAmountPS)),2) 
-				WHEN 'medium' THEN ROUND(SUM(((ToppingCost * (1 + pizza_topping.PizzaToppingExtra)) * topping.ToppingAmountMD)),2)
-				WHEN 'large' THEN ROUND(SUM(((ToppingCost * (1 + pizza_topping.PizzaToppingExtra)) * topping.ToppingAmountLG)),2) 
-				WHEN 'x-large' THEN ROUND(SUM(((ToppingCost * (1 + pizza_topping.PizzaToppingExtra)) * topping.ToppingAmountXL)),2) 
-			END AS ToppingCostTotal,
-			(SELECT
-				BaseCost
-				FROM
-					base,
-					pizza
-				WHERE pizza.CrustID = base.CrustID AND pizza.SizeID = base.SizeID AND pizza.PizzaID = (SELECT MAX(pizza.PizzaID) FROM pizza)
-			) AS BaseCost
-		FROM 
-			pizza_topping
-			JOIN topping ON topping.ToppingID = pizza_topping.ToppingID
-			JOIN pizza ON pizza_topping.PizzaID = pizza.PizzaID
-		WHERE
-			pizza_topping.ToppingID = topping.ToppingID AND pizza.PizzaID = (SELECT MAX(PizzaID) FROM pizza)
-	) AS temp
-)
-WHERE PizzaID = (SELECT MAX(PizzaID) FROM pizza_topping);
+CALL UPDATEPIZZATOPPINGS();
 
 UPDATE customer_order
 SET OrderPrice = (
@@ -157,24 +100,19 @@ SET OrderPrice = (
 WHERE OrderID = (SELECT MAX(OrderID) FROM pizza);
     
     
+-- ORDER 2
+    
+    
 INSERT INTO customer_order
 	(CustomerID, OrderType, OrderTime, OrderPrice, OrderCost, OrderComplete, OrderTableNumber)
     VALUES
 		(null, 'dine-in', '2022-04-03 12:05:00', 0, 0, 1, 4);
         
-INSERT INTO pizza
-	(CrustID, SizeID, OrderID, PizzaPrice, PizzaCost, PizzaDate, PizzaComplete)
-	VALUES(
-		'Pan',
-        'medium',
-        (SELECT MAX(OrderID)
-        FROM customer_order),
-        0,
-        0,
-        (SELECT CONVERT(OrderTime, DATE) as PizzaDate
-        FROM customer_order
-        WHERE OrderID = (SELECT MAX(OrderID) FROM customer_order)),
-        1);
+CALL ADDPIZZA(
+	(SELECT MAX(OrderID) FROM customer_order),
+    'Pan',
+    'medium'
+    );
         
         
 INSERT INTO pizza_topping
@@ -213,74 +151,13 @@ INSERT INTO discount_pizza
         'Specialty Pizza'
 	);
     
-UPDATE pizza
-SET PizzaPrice = (
-	SELECT
-		BasePrice + ToppingPriceTotal - DiscountTotal AS PizzaPrice
-	FROM 
-		(SELECT
-			ROUND(SUM((ToppingPrice * (1 + pizza_topping.PizzaToppingExtra))),2) AS ToppingPriceTotal,
-			(SELECT
-				BasePrice
-				FROM
-					base,
-					pizza
-				WHERE pizza.CrustID = base.CrustID AND pizza.SizeID = base.SizeID AND pizza.PizzaID = (SELECT MAX(pizza.PizzaID) FROM pizza)
-			) AS BasePrice
-		FROM 
-			topping,
-			pizza_topping
-		WHERE
-			pizza_topping.ToppingID = topping.ToppingID AND PizzaID = (SELECT MAX(PizzaID) FROM pizza)
-		) AS pizzaTemp,
-		(SELECT
-			COALESCE(SUM(DiscountAmount), 0) AS DiscountTotal
-		FROM discount_pizza, pizza, discount
-		WHERE discount.DiscountID = discount_pizza.DiscountID AND pizza.PizzaID = discount_pizza.PizzaID AND pizza.PizzaID = (SELECT MAX(pizza.PizzaID) FROM pizza)
-		) AS discountTemp
-    ),
-    PizzaCost = (
-		SELECT
-			BaseCost + ToppingCostTotal AS PizzaCost
-		FROM 
-			(
-				SELECT
-					CASE pizza.SizeID 
-						WHEN 'small' THEN ROUND(SUM(((ToppingCost * (1 + pizza_topping.PizzaToppingExtra)) * topping.ToppingAmountPS)),2) 
-						WHEN 'medium' THEN ROUND(SUM(((ToppingCost * (1 + pizza_topping.PizzaToppingExtra)) * topping.ToppingAmountMD)),2)
-						WHEN 'large' THEN ROUND(SUM(((ToppingCost * (1 + pizza_topping.PizzaToppingExtra)) * topping.ToppingAmountLG)),2) 
-						WHEN 'x-large' THEN ROUND(SUM(((ToppingCost * (1 + pizza_topping.PizzaToppingExtra)) * topping.ToppingAmountXL)),2) 
-					END AS ToppingCostTotal,
-					(SELECT
-						BaseCost
-						FROM
-							base,
-							pizza
-						WHERE pizza.CrustID = base.CrustID AND pizza.SizeID = base.SizeID AND pizza.PizzaID = (SELECT MAX(pizza.PizzaID) FROM pizza)
-					) AS BaseCost
-				FROM 
-					pizza_topping
-					JOIN topping ON topping.ToppingID = pizza_topping.ToppingID
-					JOIN pizza ON pizza_topping.PizzaID = pizza.PizzaID
-				WHERE
-					pizza_topping.ToppingID = topping.ToppingID AND pizza.PizzaID = (SELECT MAX(PizzaID) FROM pizza)
-			) AS temp
-		)
-WHERE PizzaID = (SELECT MAX(PizzaID) FROM pizza_topping);
+CALL UPDATEPIZZATOPPINGS();
 
-INSERT INTO pizza
-	(CrustID, SizeID, OrderID, PizzaPrice, PizzaCost, PizzaDate, PizzaComplete)
-	VALUES(
-		'Original',
-        'small',
-        (SELECT MAX(OrderID)
-        FROM customer_order),
-        0,
-        0,
-        (SELECT CONVERT(OrderTime, DATE) as PizzaDate
-        FROM customer_order
-        WHERE OrderID = (SELECT MAX(OrderID) FROM customer_order)),
-        1);
+CALL ADDPIZZA(
+	(SELECT MAX(OrderID) FROM customer_order),
+    'Original',
+    'small'
+    );
 
 INSERT INTO pizza_topping
 	(PizzaID, ToppingID, PizzaToppingExtra)
@@ -298,68 +175,295 @@ INSERT INTO pizza_topping
         'Banana Peppers',
         0);
 
-UPDATE pizza
-SET PizzaPrice = (
-	SELECT
-		BasePrice + ToppingPriceTotal - DiscountTotal AS PizzaPrice
-	FROM 
-		(SELECT
-			ROUND(SUM((ToppingPrice * (1 + pizza_topping.PizzaToppingExtra))),2) AS ToppingPriceTotal,
-			(SELECT
-				BasePrice
-				FROM
-					base,
-					pizza
-				WHERE pizza.CrustID = base.CrustID AND pizza.SizeID = base.SizeID AND pizza.PizzaID = (SELECT MAX(pizza.PizzaID) FROM pizza)
-			) AS BasePrice
-		FROM 
-			topping,
-			pizza_topping
-		WHERE
-			pizza_topping.ToppingID = topping.ToppingID AND PizzaID = (SELECT MAX(PizzaID) FROM pizza)
-		) AS pizzaTemp,
-		(SELECT
-			COALESCE(SUM(DiscountAmount), 0) AS DiscountTotal
-		FROM discount_pizza, pizza, discount
-		WHERE discount.DiscountID = discount_pizza.DiscountID AND pizza.PizzaID = discount_pizza.PizzaID AND pizza.PizzaID = (SELECT MAX(pizza.PizzaID) FROM pizza)
-		) AS discountTemp
-    ),
-    PizzaCost = (
-		SELECT
-			BaseCost + ToppingCostTotal AS PizzaCost
-		FROM 
-			(
-				SELECT
-					CASE pizza.SizeID 
-						WHEN 'small' THEN ROUND(SUM(((ToppingCost * (1 + pizza_topping.PizzaToppingExtra)) * topping.ToppingAmountPS)),2) 
-						WHEN 'medium' THEN ROUND(SUM(((ToppingCost * (1 + pizza_topping.PizzaToppingExtra)) * topping.ToppingAmountMD)),2)
-						WHEN 'large' THEN ROUND(SUM(((ToppingCost * (1 + pizza_topping.PizzaToppingExtra)) * topping.ToppingAmountLG)),2) 
-						WHEN 'x-large' THEN ROUND(SUM(((ToppingCost * (1 + pizza_topping.PizzaToppingExtra)) * topping.ToppingAmountXL)),2) 
-					END AS ToppingCostTotal,
-					(SELECT
-						BaseCost
-						FROM
-							base,
-							pizza
-						WHERE pizza.CrustID = base.CrustID AND pizza.SizeID = base.SizeID AND pizza.PizzaID = (SELECT MAX(pizza.PizzaID) FROM pizza)
-					) AS BaseCost
-				FROM 
-					pizza_topping
-					JOIN topping ON topping.ToppingID = pizza_topping.ToppingID
-					JOIN pizza ON pizza_topping.PizzaID = pizza.PizzaID
-				WHERE
-					pizza_topping.ToppingID = topping.ToppingID AND pizza.PizzaID = (SELECT MAX(PizzaID) FROM pizza)
-			) AS temp
-		)
-WHERE PizzaID = (SELECT MAX(PizzaID) FROM pizza_topping);
+CALL UPDATEPIZZATOPPINGS();
 
-UPDATE customer_order
-SET OrderPrice = (
-	SELECT SUM(PizzaPrice)
-    FROM pizza
-    WHERE OrderID = (SELECT MAX(OrderID) FROM pizza)), 
-    OrderCost = (
-    SELECT SUM(PizzaCost)
-    FROM pizza
-    WHERE OrderID = (SELECT MAX(OrderID) FROM pizza))
-WHERE OrderID = (SELECT MAX(OrderID) FROM pizza);
+CALL UPDATEORDERIN();
+
+
+-- ORDER 3
+
+INSERT INTO customer_order
+	(CustomerID, OrderType, OrderTime, OrderPrice, OrderCost, OrderComplete, OrderTableNumber)
+    VALUES
+		(null, 'dine-out', '2022-03-03 21:30:00', 0, 0, 1, null);
+        
+CALL ADDPIZZA(
+	(SELECT MAX(OrderID) FROM customer_order),
+    'Original',
+    'large'
+    );
+        
+INSERT INTO pizza_topping
+	(PizzaID, ToppingID, PizzaToppingExtra)
+    VALUES
+		((SELECT MAX(PizzaID)
+        FROM pizza),
+        'Regular Cheese',
+        0),
+        ((SELECT MAX(PizzaID)
+        FROM pizza),
+        'Pepperoni',
+        0);
+        
+CALL UPDATEPIZZATOPPINGS();
+
+CALL ADDPIZZA(
+	(SELECT MAX(OrderID) FROM customer_order),
+    'Original',
+    'large'
+    );
+        
+INSERT INTO pizza_topping
+	(PizzaID, ToppingID, PizzaToppingExtra)
+    VALUES
+		((SELECT MAX(PizzaID)
+        FROM pizza),
+        'Regular Cheese',
+        0),
+        ((SELECT MAX(PizzaID)
+        FROM pizza),
+        'Pepperoni',
+        0);
+        
+CALL UPDATEPIZZATOPPINGS();
+
+CALL ADDPIZZA(
+	(SELECT MAX(OrderID) FROM customer_order),
+    'Original',
+    'large'
+    );
+        
+INSERT INTO pizza_topping
+	(PizzaID, ToppingID, PizzaToppingExtra)
+    VALUES
+		((SELECT MAX(PizzaID)
+        FROM pizza),
+        'Regular Cheese',
+        0),
+        ((SELECT MAX(PizzaID)
+        FROM pizza),
+        'Pepperoni',
+        0);
+        
+CALL UPDATEPIZZATOPPINGS();
+
+CALL ADDPIZZA(
+	(SELECT MAX(OrderID) FROM customer_order),
+    'Original',
+    'large'
+    );
+        
+INSERT INTO pizza_topping
+	(PizzaID, ToppingID, PizzaToppingExtra)
+    VALUES
+		((SELECT MAX(PizzaID)
+        FROM pizza),
+        'Regular Cheese',
+        0),
+        ((SELECT MAX(PizzaID)
+        FROM pizza),
+        'Pepperoni',
+        0);
+        
+CALL UPDATEPIZZATOPPINGS();
+
+CALL ADDPIZZA(
+	(SELECT MAX(OrderID) FROM customer_order),
+    'Original',
+    'large'
+    );
+        
+INSERT INTO pizza_topping
+	(PizzaID, ToppingID, PizzaToppingExtra)
+    VALUES
+		((SELECT MAX(PizzaID)
+        FROM pizza),
+        'Regular Cheese',
+        0),
+        ((SELECT MAX(PizzaID)
+        FROM pizza),
+        'Pepperoni',
+        0);
+        
+CALL UPDATEPIZZATOPPINGS();
+
+CALL ADDPIZZA(
+	(SELECT MAX(OrderID) FROM customer_order),
+    'Original',
+    'large'
+    );
+        
+INSERT INTO pizza_topping
+	(PizzaID, ToppingID, PizzaToppingExtra)
+    VALUES
+		((SELECT MAX(PizzaID)
+        FROM pizza),
+        'Regular Cheese',
+        0),
+        ((SELECT MAX(PizzaID)
+        FROM pizza),
+        'Pepperoni',
+        0);
+        
+CALL UPDATEPIZZATOPPINGS();
+
+CALL ADDCUSTOMER('Andrew', 'Wilkes-Krier', '864-254-5861', null);
+
+CALL UPDATEORDEROUT('864-254-5861');
+
+-- ORDER 4
+
+INSERT INTO customer_order
+	(CustomerID, OrderType, OrderTime, OrderPrice, OrderCost, OrderComplete, OrderTableNumber)
+    VALUES
+		(null, 'delivery', '2022-04-20 19:11:00', 0, 0, 1, null);
+
+CALL ADDPIZZA(
+	(SELECT MAX(OrderID) FROM customer_order),
+    'Original',
+    'x-large'
+    );
+        
+INSERT INTO pizza_topping
+	(PizzaID, ToppingID, PizzaToppingExtra)
+    VALUES
+		((SELECT MAX(PizzaID)
+        FROM pizza),
+        'Four Cheese Blend',
+        0),
+        ((SELECT MAX(PizzaID)
+        FROM pizza),
+        'Pepperoni',
+        0), 
+        ((SELECT MAX(PizzaID)
+        FROM pizza),
+        'Sausage',
+        0);
+        
+CALL UPDATEPIZZATOPPINGS();
+
+CALL ADDPIZZA(
+	(SELECT MAX(OrderID) FROM customer_order),
+    'Original',
+    'x-large'
+    );
+        
+INSERT INTO pizza_topping
+	(PizzaID, ToppingID, PizzaToppingExtra)
+    VALUES
+		((SELECT MAX(PizzaID)
+        FROM pizza),
+        'Four Cheese Blend',
+        0),
+        ((SELECT MAX(PizzaID)
+        FROM pizza),
+        'Ham',
+        1), 
+        ((SELECT MAX(PizzaID)
+        FROM pizza),
+        'Pineapple',
+        1);
+        
+INSERT INTO discount_pizza
+	(PizzaID, DiscountID)
+	VALUES
+		((SELECT MAX(PizzaID)
+        FROM pizza),
+        'Specialty Pizza'
+	);
+        
+CALL UPDATEPIZZATOPPINGS();
+
+CALL ADDPIZZA(
+	(SELECT MAX(OrderID) FROM customer_order),
+    'Original',
+    'x-large'
+    );
+        
+INSERT INTO pizza_topping
+	(PizzaID, ToppingID, PizzaToppingExtra)
+    VALUES
+		((SELECT MAX(PizzaID)
+        FROM pizza),
+        'Four Cheese Blend',
+        0),
+        ((SELECT MAX(PizzaID)
+        FROM pizza),
+        'Jalapenos',
+        0), 
+        ((SELECT MAX(PizzaID)
+        FROM pizza),
+        'Bacon',
+        0);
+
+CALL UPDATEPIZZATOPPINGS();
+
+INSERT INTO discount_order
+	(OrderID, DiscountID)
+    VALUES
+		((SELECT MAX(OrderID)
+		FROM customer_order),
+        'Gameday Special'
+	);
+    
+CALL UPDATECUSTOMERADDRESS('864-254-5861', '115 Party Blvd, Anderson SC 29621');
+    
+CALL UPDATEORDEROUT('864-254-5861');
+
+-- ORDER 5
+
+INSERT INTO customer_order
+	(CustomerID, OrderType, OrderTime, OrderPrice, OrderCost, OrderComplete, OrderTableNumber)
+    VALUES
+		(null, 'dine-out', '2022-03-02 17:30:00', 0, 0, 1, null);
+        
+CALL ADDPIZZA(
+	(SELECT MAX(OrderID) FROM customer_order),
+    'Gluten-Free',
+    'x-large'
+    );
+        
+INSERT INTO pizza_topping
+	(PizzaID, ToppingID, PizzaToppingExtra)
+    VALUES
+		((SELECT MAX(PizzaID)
+        FROM pizza),
+        'Goat Cheese',
+        0),
+        ((SELECT MAX(PizzaID)
+        FROM pizza),
+        'Green Pepper',
+        0), 
+        ((SELECT MAX(PizzaID)
+        FROM pizza),
+        'Onion',
+        0),
+        ((SELECT MAX(PizzaID)
+        FROM pizza),
+        'Roma Tomato',
+        0),
+        ((SELECT MAX(PizzaID)
+        FROM pizza),
+        'Mushrooms',
+        0),
+        ((SELECT MAX(PizzaID)
+        FROM pizza),
+        'Black Olives',
+        0);
+        
+INSERT INTO discount_pizza
+	(PizzaID, DiscountID)
+	VALUES
+		((SELECT MAX(PizzaID)
+        FROM pizza),
+        'Specialty Pizza'
+	);
+
+CALL UPDATEPIZZATOPPINGS();
+
+CALL ADDCUSTOMER('Matt', 'Engers', '864-474-9953', null);
+        
+CALL UPDATEORDEROUT('864-474-9953');
+
+-- ORDER 6
+
