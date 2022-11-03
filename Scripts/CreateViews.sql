@@ -17,7 +17,7 @@ CREATE VIEW ProfitByPizza AS
 SELECT
 	profit.SizeID AS PizzaSize,
     profit.CrustID AS PizzaCrust,
-    CAST(TypeProfit AS DECIMAL(5,2)) AS Profit,
+    CAST(TypeProfit AS DECIMAL(6,2)) AS Profit,
     LastOrderDate
 FROM
     (SELECT 
@@ -33,22 +33,29 @@ FROM
 GROUP BY SizeID,CrustID
 ORDER BY TypeProfit DESC;
 
-Select * from ProfitByPizza;
+SELECT * FROM ProfitByPizza;
 
 DROP VIEW IF EXISTS ProfitByOrderType;
-Create VIEW ProfitByOrderType AS 
 SELECT
-	OrderType AS CustomerType,
-	if(grouping(OrderType),'Grand Total',(DATE_FORMAT(OrderTime,'%Y-%M'))) AS OrderDate,
+    OrderType AS CustomerType,
+    DATE_FORMAT(OrderTime,'%Y-%M') AS OrderDate,
     ROUND(SUM(OrderPrice),2) as TotalOrderPrice,
-	ROUND(Sum(OrderCost),2) as TotalOrderCost,
-	ROUND(Sum(OrderPrice-OrderCost),2) as Profit
+    ROUND(Sum(OrderCost),2) as TotalOrderCost,
+    ROUND(Sum(OrderPrice-OrderCost),2) as Profit
 FROM
     customer_order
-GROUP BY OrderType WITH ROLLUP
-ORDER BY OrderType DESC;
-
-SELECT * FROM ProfitByOrderType;
+GROUP BY 
+    MONTH(OrderTime),
+    OrderType
+UNION all
+select
+    NULL,
+    'Grand Total',
+    round(sum(OrderPrice),2) as TotalOrderPrice,
+    round(sum(OrderCost),2) as TotalOrderCost,
+    round(sum(OrderPrice-OrderCost),2) as Profit
+from
+    customer_order
     
 	
 	
