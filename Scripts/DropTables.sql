@@ -1,4 +1,5 @@
-USE Project;
+-- Written by Neil Kuehn, Christopher Doering
+USE Pizzeria;
 DROP TABLE IF EXISTS pizza_topping;
 DROP TABLE IF EXISTS topping;
 DROP TABLE IF EXISTS discount_order;

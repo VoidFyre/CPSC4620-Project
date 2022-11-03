@@ -1,4 +1,5 @@
-USE Project;
+-- Written by Neil Kuehn, Christopher Doering
+USE Pizzeria;
 
 CREATE TABLE IF NOT EXISTS base (
     SizeID VARCHAR(20) NOT NULL,

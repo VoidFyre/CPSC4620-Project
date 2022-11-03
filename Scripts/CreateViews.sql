@@ -1,3 +1,6 @@
+-- Written by Neil Kuehn, Christopher Doering
+USE Pizzeria;
+
 DROP VIEW IF EXISTS ToppingPopularity;
 
 CREATE VIEW ToppingPopularity AS

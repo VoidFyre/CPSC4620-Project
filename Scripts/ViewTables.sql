@@ -1,4 +1,5 @@
-USE Project;
+-- Written by Neil Kuehn, Christopher Doering
+USE Pizzeria;
 
 SELECT * FROM base;
 SELECT * FROM customer;
