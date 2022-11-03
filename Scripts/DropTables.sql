@@ -1,0 +1,9 @@
+DROP TABLE discount;
+DROP TABLE discount_order;
+DROP TABLE discount_pizza;
+DROP TABLE pizza;
+DROP TABLE customer;
+DROP TABLE pizza_topping;
+DROP TABLE topping;
+DROP TABLE base;
+DROP TABLE customer_order;
