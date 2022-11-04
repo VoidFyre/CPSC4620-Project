@@ -722,4 +722,12 @@ CALL UPDATEPIZZATOPPINGS();
 
 CALL ADDCUSTOMER('Milo', 'Auckerman', '864-878-5679', '879 Suburban Home, Anderson, SC 29621');
 
+INSERT INTO discount_order
+	(OrderID, DiscountID)
+    VALUES
+		((SELECT MAX(OrderID)
+		FROM customer_order),
+        'Employee'
+	);
+
 CALL UPDATEORDEROUT('864-878-5679');
