@@ -39,6 +39,9 @@ ORDER BY TypeProfit DESC;
 SELECT * FROM ProfitByPizza;
 
 DROP VIEW IF EXISTS ProfitByOrderType;
+
+CREATE VIEW ProfitByOrderType AS
+
 SELECT
     OrderType AS CustomerType,
     DATE_FORMAT(OrderTime,'%Y-%M') AS OrderDate,
@@ -58,8 +61,8 @@ select
     round(sum(OrderCost),2) as TotalOrderCost,
     round(sum(OrderPrice-OrderCost),2) as Profit
 from
-    customer_order
+    customer_order;
     
-	
-	
+SELECT * FROM ProfitByOrderType;
+
 
