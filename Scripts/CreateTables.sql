@@ -1,4 +1,5 @@
 -- Written by Neil Kuehn, Christopher Doering
+CREATE SCHEMA IF NOT EXISTS Pizzeria;
 USE Pizzeria;
 
 CREATE TABLE IF NOT EXISTS base (
