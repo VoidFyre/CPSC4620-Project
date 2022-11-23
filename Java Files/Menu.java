@@ -31,7 +31,7 @@ public class Menu {
 		System.out.println("Welcome to Taylor's Pizzeria!");
 		
 		int menu_option = 0;
-
+		
 		// present a menu of options and take their selection
 		PrintMenu();
 		String option = reader.readLine();
@@ -109,6 +109,7 @@ public class Menu {
 		
 		
 		
+		
 		System.out.println("Finished adding order...Returning to menu...");
 	}
 	
@@ -118,9 +119,11 @@ public class Menu {
 		/*
 		 * Simply print out all of the customers from the database. 
 		 */
+		ArrayList<Customer> customers = getCustomerList();
 		
-		
-		
+		for(Customer C:customers) {
+			System.out.println(C.toString());
+		}
 		
 		
 		
