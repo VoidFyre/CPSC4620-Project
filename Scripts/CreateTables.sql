@@ -27,6 +27,7 @@ CREATE TABLE IF NOT EXISTS customer_order (
     OrderPrice FLOAT NOT NULL,
     OrderCost FLOAT NOT NULL,
     OrderComplete INT NOT NULL,
+    OrderPickedUp INT,
     OrderTableNumber INT,
     PRIMARY KEY (OrderID),
     FOREIGN KEY (CustomerID) REFERENCES customer(CustomerID)
