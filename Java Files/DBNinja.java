@@ -32,12 +32,12 @@ public final class DBNinja {
 	// crusts
 	public final static String pickup = "pickup";
 	public final static String delivery = "delivery";
-	public final static String dine_in = "dinein";
+	public final static String dine_in = "dine-in";
 
 	public final static String size_s = "small";
 	public final static String size_m = "medium";
-	public final static String size_l = "Large";
-	public final static String size_xl = "XLarge";
+	public final static String size_l = "large";
+	public final static String size_xl = "x-large";
 
 	public final static String crust_thin = "Thin";
 	public final static String crust_orig = "Original";
@@ -82,10 +82,13 @@ public final class DBNinja {
 		 * adding the order to the order DB table, but we're also recording
 		 * the necessary data for the delivery, dinein, and pickup tables
 		 */
-	
+		
 
+				
+		
 		
 		//DO NOT FORGET TO CLOSE YOUR CONNECTION
+		conn.close();
 	}
 	
 	public static void addPizza(Pizza p) throws SQLException, IOException
@@ -276,6 +279,7 @@ public final class DBNinja {
 
 	public static ArrayList<Order> getCurrentOrders() throws SQLException, IOException {
 		connect_to_db();
+		ArrayList<Order> orders = new ArrayList<Order>();
 		/*
 		 * This function should return an arraylist of all of the orders.
 		 * Remember that in Java, we account for supertypes and subtypes
@@ -286,11 +290,25 @@ public final class DBNinja {
 		 * these orders should print in order from newest to oldest.
 		 */
 
-
-
+		String query = "SELECT * FROM customer_order ORDER BY OrderTime ASC;";
+		Statement queryStatement = conn.createStatement();
+		ResultSet resultSet = queryStatement.executeQuery(query);
+		
+		while(resultSet.next()) {
+			switch (resultSet.getString("OrderType")) {
+				case "pickup" :
+					//orders.add(PickupOrder())
+					break;
+				case "delivery" :
+					break;
+				case "dine-in" :
+					break;
+			}
+		}			
 		
 		//DO NOT FORGET TO CLOSE YOUR CONNECTION
-		return null;
+		conn.close();
+		return(orders);
 	}
 	
 	public static ArrayList<Order> sortOrders(ArrayList<Order> list)
@@ -426,14 +444,19 @@ public final class DBNinja {
 		 * return an arrayList of all the customers. These customers should
 		 *print in alphabetical order, so account for that as you see fit.
 		*/
-
-
+		String query = "SELECT * FROM CUSTOMERS ORDER BY CustomerLastName, CustomerFirstName, CustomerPhone;";
+		Statement queryStatement = conn.createStatement();
+		ResultSet resultSet = queryStatement.executeQuery(query);
 		
-		
-		
-		
+		while(resultSet.next()) {
+			custs.add(Customer(resultSet.getInt("CustomerID"),
+					resultSet.getString("CustomerFirstName"),
+					resultSet.getString("CustomerLastName"),
+					resultSet.getString("CustomerPhone")));
+		}			
 		
 		//DO NOT FORGET TO CLOSE YOUR CONNECTION
+		conn.close();
 		return custs;
 	}
 	

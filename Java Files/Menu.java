@@ -31,7 +31,7 @@ public class Menu {
 		System.out.println("Welcome to Taylor's Pizzeria!");
 		
 		int menu_option = 0;
-
+		
 		// present a menu of options and take their selection
 		PrintMenu();
 		String option = reader.readLine();
@@ -193,7 +193,6 @@ public class Menu {
 			}
 		}
 		
-
 		//creating a pizza
 		ArrayList<Pizza> pizza_list;
 		boolean all_pizza_added = false;
@@ -230,12 +229,13 @@ public class Menu {
 		/*
 		 * Simply print out all of the customers from the database. 
 		 */
-		ArrayList<Customer> customers = getCustomerList();
-        
-        System.out.println("Customers\n----------------------------------------------");
-        for(Customer C:customers) {
-            System.out.println(C.toString());
-        }
+		ArrayList<Customer> customers = DBNinja.getCustomerList();
+		
+		System.out.println("Customers\n----------------------------------------------");
+		for(Customer C:customers) {
+			System.out.println(C.toString());
+		}		
+
 	}
 	
 
@@ -302,6 +302,8 @@ public class Menu {
 	 * When I enter the order, print out all the information about that order, not just the simplified view.
 	 * 
 	 */
+		Scanner reader = new Scanner(System.in);
+		System.out.println("Would you like to:\n(a) display all orders\n(b) display all orders since a specific date" );
 		
 	}
 
