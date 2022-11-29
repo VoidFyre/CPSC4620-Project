@@ -354,7 +354,7 @@ CALL UPDATEORDERIN();
 INSERT INTO customer_order
 	(CustomerID, OrderType, OrderTime, OrderPrice, OrderCost, OrderComplete, OrderTableNumber)
     VALUES
-		(null, 'dine-out', '2022-03-03 21:30:00', 0, 0, 1, null);
+		(null, 'pickup', '2022-03-03 21:30:00', 0, 0, 1, null);
         
 CALL ADDPIZZA(
 	(SELECT MAX(OrderID) FROM customer_order),
@@ -584,7 +584,7 @@ CALL UPDATEORDEROUT('864-254-5861');
 INSERT INTO customer_order
 	(CustomerID, OrderType, OrderTime, OrderPrice, OrderCost, OrderComplete, OrderTableNumber)
     VALUES
-		(null, 'dine-out', '2022-03-02 17:30:00', 0, 0, 1, null);
+		(null, 'pickup', '2022-03-02 17:30:00', 0, 0, 1, null);
         
 CALL ADDPIZZA(
 	(SELECT MAX(OrderID) FROM customer_order),

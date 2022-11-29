@@ -89,7 +89,7 @@ public class Menu {
 	// allow for a new order to be placed
 	public static void EnterOrder() throws SQLException, IOException 
 	{
-		BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
+		Scanner reader = new Scanner(System.in);
 		/*
 		 * EnterOrder should do the following:
 		 * Ask if the order is for an existing customer -> If yes, select the customer. If no -> create the customer (as if the menu option 2 was selected).
@@ -107,10 +107,120 @@ public class Menu {
 		 * return to menu
 		 */
 		
+		 //Asking if existing customer
+		Customer customer;
+		boolean customer_found = false;
+		while (!customer_found) {
+			System.out.println("Are You an Existing Customer or a New Customer?");
+			System.out.println("1. Existing Customer");
+			System.out.println("2. New Customer");
+			System.out.println("Enter the Corresponding Number.");
+			String newcustomer = reader.nextLine();
+			ArrayList<Customer> customer_list;
+			switch(newcustomer) {
+				//Existing Customer
+				case "1":
+					boolean customer_number_found = false;
+					customer_list = getCustomerList();
+					while (!customer_number_found) {
+						System.out.println("List of Customers:");
+						viewCustomers();
+						System.out.println("Enter Your Customer ID");
+						String CustID = reader.nextLine();
+						//check if customer exists
+						for (Customer cus: customer_list) {
+							if (cus.getCustID() == CustID) {
+								customer = cus;
+							}
+							customer_number_found = true;
+							break;
+						}
+						if (!customer_number_found) {
+							System.out.println("Invalid Selection. Try Again.");
+						}
+					}
+					break;
+
+				//New Customer
+				case "2":
+					customer = EnterCustomer();
+					customer_list = getCustomerList();
+					boolean customer_info_found = false;
+					for(Customer cus: customer_list) {
+						if (cus.getPhone() == customer.getPhone()) {
+							customer = cus;
+							customer_found = true;
+						}
+					}
+					break;
+				default:
+					System.out.println("Invalid Selection. Try Again.");
+			}
+		}
 		
+		//Setting up an order
+
+		System.out.println("What Type of Order is This?");
+		boolean got_order_type = false;
+		Order order;
+		while (!got_order_type) {
+			System.out.println("1. Dine-in");
+			System.out.println("2. Pickup");
+			System.out.println("3. Delivery");
+			System.out.println("Enter the Corresponding Number.");
+			String order_type = reader.nextLine();
+			SimpleDateFormat formatter = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss");  
+			Date date = new Date();  
+			date = formatter.format(date); 
+			switch (order_type) {
+				case "1":
+					order = new DineinOrder(null, customer.getCustID(), date,  null, null, 0, null);
+					got_order_type = true;
+					break;
+				case "2":
+					order = new PickupOrder(null, customer.getCustID(), date, null, null, 0, 0);
+					got_order_type = true;
+					break;
+				case "3":
+					String address;
+					System.out.println("What Is The Address for This Delivery?");
+					while ((address = reader.nextLine()) == null) {
+						System.out.println("What Is The Address for This Delivery?");
+					}
+					order = new DeliveryOrder(null, customer.getCustID(), date, null, null, 0, address);
+					got_order_type = true;
+					customer.setAddress(address);
+			}
+		}
 		
-		
+		//creating a pizza
+		ArrayList<Pizza> pizza_list;
+		boolean all_pizza_added = false;
+		while(!all_pizza_added) {
+			pizza_list.add(buildPizza())
+
+			boolean add_another_answer = false;
+			while (!add_another_pizza) {
+				System.out.println("Would You Like To Add Another Pizza?");
+				System.out.println("1. Yes");
+				System.out.println("2. No");
+				System.out.println("Enter the Corresponding Number.");
+				response = reader.nextLine();
+				switch (response) {
+					case "1":
+						add_another_answer = true;
+						break;
+					case "2":
+						add_another_answer = true;
+						all_pizza_added = true;
+						break;
+					default: 
+						System.out.println("Invalid Selection. Try Again.");
+				}
+			}
+		}
 		System.out.println("Finished adding order...Returning to menu...");
+		reader.close();
 	}
 	
 	
@@ -125,11 +235,12 @@ public class Menu {
 		for(Customer C:customers) {
 			System.out.println(C.toString());
 		}		
+
 	}
 	
 
 	// Enter a new customer in the database
-	public static void EnterCustomer() throws SQLException, IOException 
+	public static Customer EnterCustomer() throws SQLException, IOException 
 	{
 		/*
 		 * Ask what the name of the customer is. YOU MUST TELL ME (the grader) HOW TO FORMAT THE FIRST NAME, LAST NAME, AND PHONE NUMBER.
@@ -142,9 +253,42 @@ public class Menu {
 		 * 
 		 * Once you get the name and phone number (and anything else your design might have) add it to the DB
 		 */
-		
-		
+		Scanner reader = new Scanner(System.in);
+		System.out.println("Enter Your First Name");
+		String name_first = reader.nextLine();
+		System.out.println("Enter Your Last Name");
+		String name_last = reader.nextLine();
+		boolean newphone = false;
+		String phone_number;
+		while (!new_phone) {
+			System.out.println("Enter Your Phone Number (###-###-####)");
+			while (!(reader.hasNext("\\d{4}-\\d{2}-\\d{2}"))) {
+				System.out.println("Invalid Input. Check Your Formatting And Try Again.");
+				System.out.println("Enter Your Phone Number (###-###-####)");
+				reader.nextLine();
+			}
+			boolean phone_found = false;
+			phone_number = reader.nextLine();
+			for (Customer cus: customer_list) {
+				if (cus.getPhone() == phone_number) {
+					customer = cus;
+					phone_found = true;
+				}
+			}
+			if (phone_found) {
+				system.out.println("Phone Number Already Exists in Registry. Try Again.");
+			}
+			else {
 
+				new_phone = true;
+			}	
+		}
+		
+		//input customer
+		Customer customer = new Customer(null, name_first, name_last, phone_number);
+		addCustomer(customer);
+		return customer;
+		reader.close();
 	}
 
 	// View any orders that are not marked as completed
@@ -229,6 +373,72 @@ public class Menu {
 		 */
 		BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
 		Pizza ret = null;
+
+		//Picking size
+		boolean size_picked = false;
+		while (!size_picked) {
+			System.out.println("What Size Pizza Would You Like?");
+			System.out.println("1. Small");
+			System.out.println("2. Medium");
+			System.out.println("3. Large");
+			System.out.println("4. Extra-Large");
+			System.out.println("Enter the Corresponding Number.");
+			response = reader.readLine();
+			switch (response) {
+				case "1":
+					ret.setSize("small");
+					size_picked = true;
+					break;
+				case "2":
+					ret.setSize("medium");
+					size_picked = true;
+					break;
+				case "3":
+					ret.setSize("large");
+					size_picked = true;
+					break;
+				case "4":
+					ret.setSize("x-large");
+					size_picked = true;
+					break;
+				default:
+					System.out.println("Invalid Selection. Try Again.");
+			}
+		}
+
+		//Picking crust
+		boolean crust_picked = false;
+		while (!crust_picked) {
+			System.out.println("What Type of Crust Would You Like?");
+			System.out.println("1. Original");
+			System.out.println("2. Thin");
+			System.out.println("3. Pan");
+			System.out.println("4. Gluten-Free");
+			System.out.println("Enter the Corresponding Number.");
+			response = reader.readLine();
+			switch (response) {
+				case "1":
+					ret.setCrustType("Original");
+					crust_picked = true;
+					break;
+				case "2":
+					ret.setCrustType("Thin");
+					crust_picked = true;
+					break;
+				case "3":
+					ret.setCrustType("Pan");
+					crust_picked = true;
+					break;
+				case "4":
+					ret.setCrustType("Gluten-Free");
+					crust_picked = true;
+					break;
+				default:
+					System.out.println("Invalid Selection. Try Again.");
+			}
+		}
+
+		//Adding toppings
 		
 		
 		

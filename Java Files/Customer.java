@@ -41,6 +41,10 @@ public class Customer
 		return Phone;
 	}
 
+	public String getAddress() {
+		return Address;
+	}
+
 	public void setCustID(int custID) {
 		CustID = custID;
 	}
@@ -55,6 +59,10 @@ public class Customer
 
 	public void setPhone(String phone) {
 		Phone = phone;
+	}
+
+	public void setAddress(String address) {
+		Address = address;
 	}
 	
 
