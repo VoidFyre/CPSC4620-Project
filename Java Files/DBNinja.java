@@ -84,6 +84,8 @@ public final class DBNinja {
 		 */
 		
 
+				
+		
 		
 		//DO NOT FORGET TO CLOSE YOUR CONNECTION
 		conn.close();
@@ -277,7 +279,7 @@ public final class DBNinja {
 
 	public static ArrayList<Order> getCurrentOrders() throws SQLException, IOException {
 		connect_to_db();
-		ArrayList<Order> orders = new ArrayList<Order>;
+		ArrayList<Order> orders = new ArrayList<Order>();
 		/*
 		 * This function should return an arraylist of all of the orders.
 		 * Remember that in Java, we account for supertypes and subtypes
@@ -295,7 +297,7 @@ public final class DBNinja {
 		while(resultSet.next()) {
 			switch (resultSet.getString("OrderType")) {
 				case "pickup" :
-					orders.add(PickupOrder())
+					//orders.add(PickupOrder())
 					break;
 				case "delivery" :
 					break;
@@ -306,7 +308,7 @@ public final class DBNinja {
 		
 		//DO NOT FORGET TO CLOSE YOUR CONNECTION
 		conn.close();
-		
+		return(orders);
 	}
 	
 	public static ArrayList<Order> sortOrders(ArrayList<Order> list)

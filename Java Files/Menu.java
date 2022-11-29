@@ -119,14 +119,12 @@ public class Menu {
 		/*
 		 * Simply print out all of the customers from the database. 
 		 */
-		ArrayList<Customer> customers = getCustomerList();
+		ArrayList<Customer> customers = DBNinja.getCustomerList();
 		
+		System.out.println("Customers\n----------------------------------------------");
 		for(Customer C:customers) {
 			System.out.println(C.toString());
-		}
-		
-		
-		
+		}		
 	}
 	
 
@@ -160,6 +158,8 @@ public class Menu {
 	 * When I enter the order, print out all the information about that order, not just the simplified view.
 	 * 
 	 */
+		Scanner reader = new Scanner(System.in);
+		System.out.println("Would you like to:\n(a) display all orders\n(b) display all orders since a specific date" );
 		
 	}
 

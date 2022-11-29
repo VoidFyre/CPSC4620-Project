@@ -21,7 +21,7 @@ public class DBConnector {
     // enter your database name here
     private static String database_name = "Pizzeria";
     // Do not change the port. 3306 is the default MySQL port
-    private static String url = "nckuehn.cjfcgl5n3mq4.us-east-1.rds.amazonaws.com";
+    private static String url = "jdbc:mysql://nckuehn.cjfcgl5n3mq4.us-east-1.rds.amazonaws.com";
     private static Connection conn;
 
 
