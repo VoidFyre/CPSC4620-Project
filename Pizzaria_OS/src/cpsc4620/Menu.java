@@ -4,9 +4,11 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.sql.SQLException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Scanner;
 
 /*
  * This file is where the front end magic happens.
@@ -108,7 +110,7 @@ public class Menu {
 		 */
 		
 		 //Asking if existing customer
-		Customer customer;
+		Customer customer = null;
 		boolean customer_found = false;
 		while (!customer_found) {
 			System.out.println("Are You an Existing Customer or a New Customer?");
@@ -121,7 +123,7 @@ public class Menu {
 				//Existing Customer
 				case "1":
 					boolean customer_number_found = false;
-					customer_list = getCustomerList();
+					customer_list = DBNinja.getCustomerList();
 					while (!customer_number_found) {
 						System.out.println("List of Customers:");
 						viewCustomers();
@@ -129,7 +131,7 @@ public class Menu {
 						String CustID = reader.nextLine();
 						//check if customer exists
 						for (Customer cus: customer_list) {
-							if (cus.getCustID() == CustID) {
+							if (cus.getCustID() == Integer.parseInt(CustID)) {
 								customer = cus;
 							}
 							customer_number_found = true;
@@ -144,7 +146,7 @@ public class Menu {
 				//New Customer
 				case "2":
 					customer = EnterCustomer();
-					customer_list = getCustomerList();
+					customer_list = DBNinja.getCustomerList();
 					boolean customer_info_found = false;
 					for(Customer cus: customer_list) {
 						if (cus.getPhone() == customer.getPhone()) {
@@ -162,23 +164,23 @@ public class Menu {
 
 		System.out.println("What Type of Order is This?");
 		boolean got_order_type = false;
-		Order order;
+		Order order = null;
 		while (!got_order_type) {
 			System.out.println("1. Dine-in");
 			System.out.println("2. Pickup");
 			System.out.println("3. Delivery");
 			System.out.println("Enter the Corresponding Number.");
 			String order_type = reader.nextLine();
-			SimpleDateFormat formatter = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss");  
-			Date date = new Date();  
-			date = formatter.format(date); 
+			SimpleDateFormat formatter = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss");
+			Date date = new Date();
+			String dateString = formatter.format(date);
 			switch (order_type) {
 				case "1":
-					order = new DineinOrder(null, customer.getCustID(), date,  null, null, 0, null);
+					order = new DineinOrder(0, customer.getCustID(), dateString,  0, 0, 0, 0);
 					got_order_type = true;
 					break;
 				case "2":
-					order = new PickupOrder(null, customer.getCustID(), date, null, null, 0, 0);
+					order = new PickupOrder(0, customer.getCustID(), dateString, 0, 0, 0, 0);
 					got_order_type = true;
 					break;
 				case "3":
@@ -187,31 +189,31 @@ public class Menu {
 					while ((address = reader.nextLine()) == null) {
 						System.out.println("What Is The Address for This Delivery?");
 					}
-					order = new DeliveryOrder(null, customer.getCustID(), date, null, null, 0, address);
+					order = new DeliveryOrder(0, customer.getCustID(), dateString, 0, 0, 0, address);
 					got_order_type = true;
 					customer.setAddress(address);
 			}
+			order.setOrderID(DBNinja.updateOrder(order));
 		}
 		
 		//creating a pizza
-		ArrayList<Pizza> pizza_list;
+		ArrayList<Pizza> pizza_list = new ArrayList<Pizza>();
 		boolean all_pizza_added = false;
 		while(!all_pizza_added) {
-			pizza_list.add(buildPizza())
-
-			boolean add_another_answer = false;
+			pizza_list.add(buildPizza(order.getOrderID()));
+			boolean add_another_pizza = false;
 			while (!add_another_pizza) {
 				System.out.println("Would You Like To Add Another Pizza?");
 				System.out.println("1. Yes");
 				System.out.println("2. No");
 				System.out.println("Enter the Corresponding Number.");
-				response = reader.nextLine();
+				int response = Integer.parseInt(reader.nextLine());
 				switch (response) {
-					case "1":
-						add_another_answer = true;
+					case 1:
+						add_another_pizza = true;
 						break;
-					case "2":
-						add_another_answer = true;
+					case 2:
+						add_another_pizza = true;
 						all_pizza_added = true;
 						break;
 					default: 
@@ -224,10 +226,9 @@ public class Menu {
 	}
 	
 	
-	public static void viewCustomers()
-	{
+	public static void viewCustomers() throws SQLException, IOException {
 		/*
-		 * Simply print out all of the customers from the database. 
+		 * Simply print out all the customers from the database.
 		 */
 		ArrayList<Customer> customers = DBNinja.getCustomerList();
 		
@@ -255,12 +256,12 @@ public class Menu {
 		 */
 		Scanner reader = new Scanner(System.in);
 		System.out.println("Enter Your First Name");
-		String name_first = reader.nextLine();
+		String nameFirst = reader.nextLine();
 		System.out.println("Enter Your Last Name");
-		String name_last = reader.nextLine();
-		boolean newphone = false;
-		String phone_number;
-		while (!new_phone) {
+		String nameLast = reader.nextLine();
+		boolean newPhone = false;
+		String phone_number = null;
+		while (!newPhone) {
 			System.out.println("Enter Your Phone Number (###-###-####)");
 			while (!(reader.hasNext("\\d{4}-\\d{2}-\\d{2}"))) {
 				System.out.println("Invalid Input. Check Your Formatting And Try Again.");
@@ -269,26 +270,25 @@ public class Menu {
 			}
 			boolean phone_found = false;
 			phone_number = reader.nextLine();
-			for (Customer cus: customer_list) {
+			for (Customer cus: DBNinja.getCustomerList()) {
 				if (cus.getPhone() == phone_number) {
-					customer = cus;
 					phone_found = true;
 				}
 			}
 			if (phone_found) {
-				system.out.println("Phone Number Already Exists in Registry. Try Again.");
+				System.out.println("Phone Number Already Exists in Registry. Try Again.");
 			}
 			else {
 
-				new_phone = true;
+				newPhone = true;
 			}	
 		}
 		
 		//input customer
-		Customer customer = new Customer(null, name_first, name_last, phone_number);
-		addCustomer(customer);
-		return customer;
+		Customer customer = new Customer(0, nameFirst, nameLast, phone_number);
+		DBNinja.addCustomer(customer);
 		reader.close();
+		return customer;
 	}
 
 	// View any orders that are not marked as completed
@@ -383,21 +383,21 @@ public class Menu {
 			System.out.println("3. Large");
 			System.out.println("4. Extra-Large");
 			System.out.println("Enter the Corresponding Number.");
-			response = reader.readLine();
+			int response = Integer.parseInt(reader.readLine());
 			switch (response) {
-				case "1":
+				case 1:
 					ret.setSize("small");
 					size_picked = true;
 					break;
-				case "2":
+				case 2:
 					ret.setSize("medium");
 					size_picked = true;
 					break;
-				case "3":
+				case 3:
 					ret.setSize("large");
 					size_picked = true;
 					break;
-				case "4":
+				case 4:
 					ret.setSize("x-large");
 					size_picked = true;
 					break;
@@ -415,21 +415,21 @@ public class Menu {
 			System.out.println("3. Pan");
 			System.out.println("4. Gluten-Free");
 			System.out.println("Enter the Corresponding Number.");
-			response = reader.readLine();
+			int response = Integer.parseInt(reader.readLine());
 			switch (response) {
-				case "1":
+				case 1:
 					ret.setCrustType("Original");
 					crust_picked = true;
 					break;
-				case "2":
+				case 2:
 					ret.setCrustType("Thin");
 					crust_picked = true;
 					break;
-				case "3":
+				case 3:
 					ret.setCrustType("Pan");
 					crust_picked = true;
 					break;
-				case "4":
+				case 4:
 					ret.setCrustType("Gluten-Free");
 					crust_picked = true;
 					break;

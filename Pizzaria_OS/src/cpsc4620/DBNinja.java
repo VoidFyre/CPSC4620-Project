@@ -75,20 +75,31 @@ public final class DBNinja {
 	 * @ensures o will be assigned an id and added to the database, along with all
 	 *          of it's pizzas. Inventory levels will be updated appropriately
 	 */
-	public static void addOrder(Order o) throws SQLException, IOException {
+	public static int updateOrder(Order o) throws SQLException, IOException {
 		connect_to_db();
 		/*
 		 * add code to add the order to the DB. Remember that we're not just
 		 * adding the order to the order DB table, but we're also recording
 		 * the necessary data for the delivery, dinein, and pickup tables
 		 */
-		
 
-				
-		
-		
+		String insert =
+				"INSERT INTO customer_order " +
+				"(CustomerID, OrderType, OrderTime, OrderPrice, OrderCost, OrderComplete, OrderTableNumber) " +
+				"VALUES " +
+				"(null, " + o.getOrderType() + ", '" + o.getDate() + "', 0, 0, 0, null);";
+
+		Statement insertStatement = conn.createStatement();
+		insertStatement.execute(insert);
+
+		String update = "SELECT MAX(OrderID) FROM customer_order;";
+		Statement queryStatement = conn.createStatement();
+		ResultSet resultSet = queryStatement.executeQuery(update);
+		int order_id = resultSet.getInt("OrderID");
+
 		//DO NOT FORGET TO CLOSE YOUR CONNECTION
 		conn.close();
+		return order_id;
 	}
 	
 	public static void addPizza(Pizza p) throws SQLException, IOException
@@ -444,15 +455,18 @@ public final class DBNinja {
 		 * return an arrayList of all the customers. These customers should
 		 *print in alphabetical order, so account for that as you see fit.
 		*/
-		String query = "SELECT * FROM CUSTOMERS ORDER BY CustomerLastName, CustomerFirstName, CustomerPhone;";
+		String query = "SELECT * FROM customer ORDER BY CustomerLastName, CustomerFirstName, CustomerPhone;";
 		Statement queryStatement = conn.createStatement();
 		ResultSet resultSet = queryStatement.executeQuery(query);
 		
 		while(resultSet.next()) {
-			custs.add(Customer(resultSet.getInt("CustomerID"),
+			Customer temp = new Customer(
+					resultSet.getInt("CustomerID"),
 					resultSet.getString("CustomerFirstName"),
 					resultSet.getString("CustomerLastName"),
-					resultSet.getString("CustomerPhone")));
+					resultSet.getString("CustomerPhone")
+			);
+			custs.add(temp);
 		}			
 		
 		//DO NOT FORGET TO CLOSE YOUR CONNECTION
