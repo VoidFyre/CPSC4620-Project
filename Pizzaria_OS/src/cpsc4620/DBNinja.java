@@ -75,7 +75,7 @@ public final class DBNinja {
 	 * @ensures o will be assigned an id and added to the database, along with all
 	 *          of it's pizzas. Inventory levels will be updated appropriately
 	 */
-	public static int updateOrder(Order o) throws SQLException, IOException {
+	public static int addOrder(Order o) throws SQLException, IOException {
 		connect_to_db();
 		/*
 		 * add code to add the order to the DB. Remember that we're not just
@@ -92,14 +92,19 @@ public final class DBNinja {
 		Statement insertStatement = conn.createStatement();
 		insertStatement.execute(insert);
 
-		String update = "SELECT MAX(OrderID) FROM customer_order;";
-		Statement queryStatement = conn.createStatement();
-		ResultSet resultSet = queryStatement.executeQuery(update);
-		int order_id = resultSet.getInt("OrderID");
+		String update = "SELECT MAX(OrderID) as OrderID FROM customer_order;";
+		PreparedStatement query = conn.prepareStatement(update,ResultSet.TYPE_SCROLL_SENSITIVE,
+				ResultSet.CONCUR_UPDATABLE);
 
+		ResultSet result = query.executeQuery();
+		int orderID = 0;
+		result.beforeFirst();
+		if(result.next()) {
+			orderID = result.getInt("OrderID");
+		}
 		//DO NOT FORGET TO CLOSE YOUR CONNECTION
 		conn.close();
-		return order_id;
+		return orderID;
 	}
 	
 	public static void addPizza(Pizza p) throws SQLException, IOException
@@ -192,17 +197,35 @@ public final class DBNinja {
 
 
 	
-	public static void addCustomer(Customer c) throws SQLException, IOException {
+	public static int addCustomer(Customer c) throws SQLException, IOException {
 		connect_to_db();
 		/*
 		 * This should add a customer to the database
 		 */
-				
-		
-		
-		
-		
+
+		String fName = c.getFName();
+		String lName = c.getLName();
+		String phone = c.getPhone();
+		String insert = "CALL ADDCUSTOMER('" + fName + "','" + lName + "','" + phone + "',null);";
+
+		Statement insertStatement = conn.createStatement();
+		insertStatement.execute(insert);
+
+
+		String update = "SELECT CustomerID FROM customer WHERE CustomerPhone = '" + phone + "';";
+		PreparedStatement query = conn.prepareStatement(update,ResultSet.TYPE_SCROLL_SENSITIVE,
+				ResultSet.CONCUR_UPDATABLE);
+		ResultSet result = query.executeQuery();
+		int CustID = 0;
+		result.beforeFirst();
+		if(result.next()) {
+			CustID = result.getInt("CustomerID");
+		}
+
+
 		//DO NOT FORGET TO CLOSE YOUR CONNECTION
+		conn.close();
+		return CustID;
 	}
 
 
@@ -404,7 +427,7 @@ public final class DBNinja {
 		 */
 		connect_to_db();
 		String ret = "";
-		String query = "Select FName, LName From Customer WHERE CustID=" + CustID + ";";
+		String query = "SELECT CustomerFirstName, CustomerLastName FROM customer WHERE CustomerID=" + CustID + ";";
 		Statement stmt = conn.createStatement();
 		ResultSet rset = stmt.executeQuery(query);
 		

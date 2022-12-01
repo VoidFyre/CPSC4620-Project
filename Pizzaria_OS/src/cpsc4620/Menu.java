@@ -37,6 +37,9 @@ public class Menu {
 					break;
 				case 2:// view customers
 					viewCustomers();
+					System.out.print("Press Enter to return");
+					reader.nextLine();
+					System.out.println();
 					break;
 				case 3:// enter customer
 					EnterCustomer();
@@ -44,18 +47,27 @@ public class Menu {
 				case 4:// view order
 					// open/closed/date
 					ViewOrders();
+					System.out.print("Press Enter to return");
+					reader.nextLine();
+					System.out.println();
 					break;
 				case 5:// mark order as complete
 					MarkOrderAsComplete();
 					break;
 				case 6:// view inventory levels
 					ViewInventoryLevels();
+					System.out.print("Press Enter to return");
+					reader.nextLine();
+					System.out.println();
 					break;
 				case 7:// add to inventory
 					AddInventory();
 					break;
 				case 8:// view reports
 					PrintReports();
+					System.out.print("Press Enter to return");
+					reader.nextLine();
+					System.out.println();
 					break;
 			}
 		}while(menuChoice != 9);
@@ -102,7 +114,7 @@ public class Menu {
 
 	public static int getIntRange(int min,int max,String prompt) {
 		int temp = getInt(prompt);
-		while((temp < min) && (temp > max)){
+		while((temp < min) || (temp > max)){
 			System.out.println("\tError: Input not in range. Try again.");
 			temp = getInt(prompt);
 		}
@@ -148,7 +160,7 @@ public class Menu {
 		 //Asking if existing customer
 		Customer customer = null;
 		boolean customer_found = false;
-		boolean customer_not_found = false;
+		boolean customer_info_found = false;
 		boolean switch_to_add = false;
 		boolean to_main_menu = false;
 		while (!customer_found) {
@@ -168,87 +180,83 @@ public class Menu {
 							viewCustomers();
 							int CustID = getInt("Enter Your Customer ID: ");
 							//check if customer exists
-							for (Customer cus: customer_list) {
+							for (Customer cus : customer_list) {
 								if (cus.getCustID() == CustID) {
 									customer = cus;
 									customer_number_found = true;
+									customer_found = true;
+									break;
 								}
-								break;
+
 							}
 							if (!customer_number_found) {
-								System.out.println("\tError: CustomerID not found, reenter Customer ID");
-								if(customer_not_found){
-									System.out.println();
-									System.out.println("Do you wish to add a customer, go back to the main menu," +
-											" or Try reentering the Customer ID?");
-									System.out.println("1. Add a customer");
-									System.out.println("2. Main menu");
-									System.out.println("3. Reenter customer ID");
-									int cnfChoice = getIntRange(1,3,"Enter the Corresponding Number: ");
-									switch (cnfChoice){
-										case 1:
-											switch_to_add = true;
-											newCustomer = 2;
-											customer_number_found = true;
-											System.out.println();
-											break;
-										case 2:
-											to_main_menu = true;
-											customer_number_found = true;
-											break;
-										case 3:
-											break;
-									}
-								}else{
-									customer_not_found = true;
+								System.out.println("\tError: CustomerID not found");
+								System.out.println();
+								System.out.println("Do you wish to add a customer, go back to the main menu," +
+										" or Try reentering the Customer ID?");
+								System.out.println("1. Add a customer");
+								System.out.println("2. Main menu");
+								System.out.println("3. Reenter customer ID");
+								int cnfChoice = getIntRange(1, 3, "Enter the Corresponding Number: ");
+								switch (cnfChoice) {
+									case 1:
+										switch_to_add = true;
+										newCustomer = 2;
+										customer_number_found = true;
+										System.out.println();
+										break;
+									case 2:
+										to_main_menu = true;
+										customer_number_found = true;
+										customer_found = true;
+										break;
+									case 3:
+										System.out.println();
+										break;
 								}
+							} else {
+								customer_info_found = true;
 							}
 						}
-						break;
+					break;
 
 					//New Customer
 					case 2:
 						switch_to_add = false;
 						customer = EnterCustomer();
 						customer_list = DBNinja.getCustomerList();
-						boolean customer_info_found = false;
-						for(Customer cus: customer_list) {
-							if (cus.getPhone() == customer.getPhone()) {
-								customer = cus;
-								customer_found = true;
-							}
-						}
+						customer_found = true;
 						break;
 					default:
 						System.out.println("Invalid Selection. Try Again.");
 				}
 			}while(switch_to_add);
 		}
-		
+		if(to_main_menu){System.out.println();return;}
+
 		//Setting up an order
 
-		System.out.println("What Type of Order is This?");
+		System.out.println("\nWhat Type of Order is This?");
 		boolean got_order_type = false;
 		Order order = null;
 		while (!got_order_type) {
 			System.out.println("1. Dine-in");
 			System.out.println("2. Pickup");
 			System.out.println("3. Delivery");
-			System.out.println("Enter the Corresponding Number.");
-			String order_type = reader.nextLine();
+			int order_type = getIntRange(1,3,"Enter the Corresponding Number: ");
 			SimpleDateFormat formatter = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss");
 			Date date = new Date();
 			String dateString = formatter.format(date);
 			switch (order_type) {
-				case "1":
+				case 1:
 					order = new DineinOrder(0, customer.getCustID(), dateString,  0, 0, 0, 0);
 					got_order_type = true;
 					break;
-				case "2":
+				case 2:
 					order = new PickupOrder(0, customer.getCustID(), dateString, 0, 0, 0, 0);
 					got_order_type = true;
 					break;
-				case "3":
+				case 3:
 					String address;
 					System.out.println("What Is The Address for This Delivery?");
 					while ((address = reader.nextLine()) == null) {
@@ -258,7 +266,7 @@ public class Menu {
 					got_order_type = true;
 					customer.setAddress(address);
 			}
-			order.setOrderID(DBNinja.updateOrder(order));
+			order.setOrderID(DBNinja.addOrder(order));
 		}
 		
 		//creating a pizza
@@ -328,7 +336,7 @@ public class Menu {
 		while (!newPhone) {
 			System.out.print("Enter Your Phone Number (###-###-####): ");
 			while (!(reader.hasNext("\\d{3}-\\d{3}-\\d{4}"))) {
-				System.out.println("Invalid Input. Check Your Formatting And Try Again.");
+				System.out.println("\tError: Invalid Input. Check Your Formatting And Try Again.");
 				System.out.print("Enter Your Phone Number (###-###-####): ");
 				reader.nextLine();
 			}
@@ -343,14 +351,14 @@ public class Menu {
 				System.out.println("Phone Number Already Exists in Registry. Try Again.");
 			}
 			else {
-
 				newPhone = true;
 			}	
 		}
 		
 		//input customer
 		Customer customer = new Customer(0, nameFirst, nameLast, phone_number);
-		DBNinja.addCustomer(customer);
+		int CustID = DBNinja.addCustomer(customer);
+		customer.setCustID(CustID);
 		return customer;
 	}
 
@@ -365,9 +373,16 @@ public class Menu {
 	 * When I enter the order, print out all the information about that order, not just the simplified view.
 	 * 
 	 */
-		Scanner reader = new Scanner(System.in);
-		System.out.println("Would you like to:\n(a) display all orders\n(b) display all orders since a specific date" );
-		
+		System.out.println("Would you like to display all orders or display all orders since a specific date?");
+		System.out.println("1. Display all orders");
+		System.out.println("2. Display all orders since a specific date");
+		int choice = getIntRange(1,2,"Enter the Corresponding Number: ");
+		if(choice == 1) {
+
+		} else {
+			System.out.println("test");
+		}
+
 	}
 
 	
