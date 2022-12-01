@@ -5,10 +5,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.sql.SQLException;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Scanner;
+import java.util.*;
 
 /*
  * This file is where the front end magic happens.
@@ -27,55 +24,48 @@ import java.util.Scanner;
  */
 
 public class Menu {
+	public static Scanner reader = new Scanner(System.in);
 	public static void main(String[] args) throws SQLException, IOException {
-		BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
-
-		System.out.println("Welcome to Taylor's Pizzeria!");
-		
-		int menu_option = 0;
-		
+		System.out.println("Welcome to Taylor's Pizzeria!\n");
 		// present a menu of options and take their selection
-		PrintMenu();
-		String option = reader.readLine();
-		menu_option = Integer.parseInt(option);
-
-		while (menu_option != 9) {
-			switch (menu_option) {
-			case 1:// enter order
-				EnterOrder();
-				break;
-			case 2:// view customers
-				viewCustomers();
-				break;
-			case 3:// enter customer
-				EnterCustomer();
-				break;
-			case 4:// view order
-				// open/closed/date
-				ViewOrders();
-				break;
-			case 5:// mark order as complete
-				MarkOrderAsComplete();
-				break;
-			case 6:// view inventory levels
-				ViewInventoryLevels();
-				break;
-			case 7:// add to inventory
-				AddInventory();
-				break;
-			case 8:// view reports
-				PrintReports();
-				break;
+		int menuChoice = 0;
+		do{
+			menuChoice = getMenuChoice();
+			switch (menuChoice) {
+				case 1:// enter order
+					EnterOrder();
+					break;
+				case 2:// view customers
+					viewCustomers();
+					break;
+				case 3:// enter customer
+					EnterCustomer();
+					break;
+				case 4:// view order
+					// open/closed/date
+					ViewOrders();
+					break;
+				case 5:// mark order as complete
+					MarkOrderAsComplete();
+					break;
+				case 6:// view inventory levels
+					ViewInventoryLevels();
+					break;
+				case 7:// add to inventory
+					AddInventory();
+					break;
+				case 8:// view reports
+					PrintReports();
+					break;
 			}
-			PrintMenu();
-			option = reader.readLine();
-			menu_option = Integer.parseInt(option);
-		}
-
+		}while(menuChoice != 9);
+		reader.close();
+		System.out.println("Shutting down program ...");
 	}
 
-	public static void PrintMenu() {
-		System.out.println("\n\nPlease enter a menu option:");
+	public static int getMenuChoice() {
+		System.out.println("Please enter a menu option:");
+		System.out.println("-------------------------------");
 		System.out.println("1. Enter a new order");
 		System.out.println("2. View Customers ");
 		System.out.println("3. Enter a new Customer ");
@@ -84,14 +74,60 @@ public class Menu {
 		System.out.println("6. View Inventory Levels");
 		System.out.println("7. Add Inventory");
 		System.out.println("8. View Reports");
-		System.out.println("9. Exit\n\n");
-		System.out.println("Enter your option: ");
+		System.out.println("9. Exit");
+		System.out.println("-------------------------------\n");
+		int menuOption = 0;
+		menuOption = getIntRange(1,9,"Enter the Corresponding Number: ");
+		System.out.println();
+		return(menuOption);
 	}
 
+	public static int getInt(String prompt){
+		int temp = 0;
+		boolean repeat = true;
+		do{
+			try{
+				System.out.print(prompt);
+				temp = reader.nextInt();
+				repeat = false;
+			}catch(NumberFormatException e) {
+				System.out.println("\tError: No input. Try again.");
+			}catch(InputMismatchException e) {
+				System.out.println("\tError: Invalid input. Try again.");
+			}
+			reader.nextLine();
+		}while(repeat);
+		return(temp);
+	}
+
+	public static int getIntRange(int min,int max,String prompt) {
+		int temp = getInt(prompt);
+		while((temp < min) && (temp > max)){
+			System.out.println("\tError: Input not in range. Try again.");
+			temp = getInt(prompt);
+		}
+		return(temp);
+	}
+
+	public static String getString(String prompt){
+		String temp = null;
+		boolean repeat = true;
+		do{
+			try{
+				System.out.print(prompt);
+				temp = reader.nextLine();
+				repeat = false;
+			}catch(NoSuchElementException e) {
+				System.out.println("\tError: No input. Try again.");
+			}
+
+		}while(repeat);
+		return(temp);
+	}
 	// allow for a new order to be placed
 	public static void EnterOrder() throws SQLException, IOException 
 	{
-		Scanner reader = new Scanner(System.in);
+
 		/*
 		 * EnterOrder should do the following:
 		 * Ask if the order is for an existing customer -> If yes, select the customer. If no -> create the customer (as if the menu option 2 was selected).
@@ -112,52 +148,81 @@ public class Menu {
 		 //Asking if existing customer
 		Customer customer = null;
 		boolean customer_found = false;
+		boolean customer_not_found = false;
+		boolean switch_to_add = false;
+		boolean to_main_menu = false;
 		while (!customer_found) {
 			System.out.println("Are You an Existing Customer or a New Customer?");
 			System.out.println("1. Existing Customer");
 			System.out.println("2. New Customer");
-			System.out.println("Enter the Corresponding Number.");
-			String newcustomer = reader.nextLine();
+			int newCustomer = getIntRange(1,2,"Enter the Corresponding Number: ");
+			System.out.println();
 			ArrayList<Customer> customer_list;
-			switch(newcustomer) {
-				//Existing Customer
-				case "1":
-					boolean customer_number_found = false;
-					customer_list = DBNinja.getCustomerList();
-					while (!customer_number_found) {
-						System.out.println("List of Customers:");
-						viewCustomers();
-						System.out.println("Enter Your Customer ID");
-						String CustID = reader.nextLine();
-						//check if customer exists
-						for (Customer cus: customer_list) {
-							if (cus.getCustID() == Integer.parseInt(CustID)) {
-								customer = cus;
+			do{
+				switch(newCustomer) {
+					//Existing Customer
+					case 1:
+						boolean customer_number_found = false;
+						customer_list = DBNinja.getCustomerList();
+						while (!customer_number_found) {
+							viewCustomers();
+							int CustID = getInt("Enter Your Customer ID: ");
+							//check if customer exists
+							for (Customer cus: customer_list) {
+								if (cus.getCustID() == CustID) {
+									customer = cus;
+									customer_number_found = true;
+								}
+								break;
 							}
-							customer_number_found = true;
-							break;
+							if (!customer_number_found) {
+								System.out.println("\tError: CustomerID not found, reenter Customer ID");
+								if(customer_not_found){
+									System.out.println();
+									System.out.println("Do you wish to add a customer, go back to the main menu," +
+											" or Try reentering the Customer ID?");
+									System.out.println("1. Add a customer");
+									System.out.println("2. Main menu");
+									System.out.println("3. Reenter customer ID");
+									int cnfChoice = getIntRange(1,3,"Enter the Corresponding Number: ");
+									switch (cnfChoice){
+										case 1:
+											switch_to_add = true;
+											newCustomer = 2;
+											customer_number_found = true;
+											System.out.println();
+											break;
+										case 2:
+											to_main_menu = true;
+											customer_number_found = true;
+											break;
+										case 3:
+											break;
+									}
+								}else{
+									customer_not_found = true;
+								}
+							}
 						}
-						if (!customer_number_found) {
-							System.out.println("Invalid Selection. Try Again.");
-						}
-					}
-					break;
+						break;
 
-				//New Customer
-				case "2":
-					customer = EnterCustomer();
-					customer_list = DBNinja.getCustomerList();
-					boolean customer_info_found = false;
-					for(Customer cus: customer_list) {
-						if (cus.getPhone() == customer.getPhone()) {
-							customer = cus;
-							customer_found = true;
+					//New Customer
+					case 2:
+						switch_to_add = false;
+						customer = EnterCustomer();
+						customer_list = DBNinja.getCustomerList();
+						boolean customer_info_found = false;
+						for(Customer cus: customer_list) {
+							if (cus.getPhone() == customer.getPhone()) {
+								customer = cus;
+								customer_found = true;
+							}
 						}
-					}
-					break;
-				default:
-					System.out.println("Invalid Selection. Try Again.");
-			}
+						break;
+					default:
+						System.out.println("Invalid Selection. Try Again.");
+				}
+			}while(switch_to_add);
 		}
 		
 		//Setting up an order
@@ -232,11 +297,11 @@ public class Menu {
 		 */
 		ArrayList<Customer> customers = DBNinja.getCustomerList();
 		
-		System.out.println("Customers\n----------------------------------------------");
+		System.out.println("List of Customers:\n----------------------------------------------");
 		for(Customer C:customers) {
 			System.out.println(C.toString());
 		}		
-
+		System.out.println("----------------------------------------------\n");
 	}
 	
 
@@ -254,18 +319,17 @@ public class Menu {
 		 * 
 		 * Once you get the name and phone number (and anything else your design might have) add it to the DB
 		 */
-		Scanner reader = new Scanner(System.in);
-		System.out.println("Enter Your First Name");
-		String nameFirst = reader.nextLine();
-		System.out.println("Enter Your Last Name");
-		String nameLast = reader.nextLine();
+
+
+		String nameFirst = getString("Enter Your First Name: ");
+		String nameLast = getString("Enter Your Last Name: ");
 		boolean newPhone = false;
 		String phone_number = null;
 		while (!newPhone) {
-			System.out.println("Enter Your Phone Number (###-###-####)");
-			while (!(reader.hasNext("\\d{4}-\\d{2}-\\d{2}"))) {
+			System.out.print("Enter Your Phone Number (###-###-####): ");
+			while (!(reader.hasNext("\\d{3}-\\d{3}-\\d{4}"))) {
 				System.out.println("Invalid Input. Check Your Formatting And Try Again.");
-				System.out.println("Enter Your Phone Number (###-###-####)");
+				System.out.print("Enter Your Phone Number (###-###-####): ");
 				reader.nextLine();
 			}
 			boolean phone_found = false;
@@ -287,7 +351,6 @@ public class Menu {
 		//input customer
 		Customer customer = new Customer(0, nameFirst, nameLast, phone_number);
 		DBNinja.addCustomer(customer);
-		reader.close();
 		return customer;
 	}
 
