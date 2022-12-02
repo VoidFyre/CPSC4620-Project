@@ -541,7 +541,7 @@ public final class DBNinja {
 			return false;
 		} else if(month1>month2){
 			return false;
-		} else
+		} els
 	}
 
 	
