@@ -56,9 +56,7 @@ public final class DBNinja {
 		try {
 			conn = DBConnector.make_connection();
 			return true;
-		} catch (SQLException e) {
-			return false;
-		} catch (IOException e) {
+		} catch (SQLException | IOException e) {
 			return false;
 		}
 
@@ -73,9 +71,13 @@ public final class DBNinja {
 	 *           pizzas do not exist in the database yet, and the topping inventory
 	 *           will allow for these pizzas to be made
 	 * @ensures o will be assigned an id and added to the database, along with all
-	 *          of it's pizzas. Inventory levels will be updated appropriately
+	 *          of its pizzas. Inventory levels will be updated appropriately
 	 */
+<<<<<<< Updated upstream
 	public static int updateOrder(Order o) throws SQLException, IOException {
+=======
+	public static int addOrder(Order o, int tableNum) throws SQLException, IOException {
+>>>>>>> Stashed changes
 		connect_to_db();
 		/*
 		 * add code to add the order to the DB. Remember that we're not just
@@ -83,11 +85,21 @@ public final class DBNinja {
 		 * the necessary data for the delivery, dinein, and pickup tables
 		 */
 
-		String insert =
-				"INSERT INTO customer_order " +
-				"(CustomerID, OrderType, OrderTime, OrderPrice, OrderCost, OrderComplete, OrderTableNumber) " +
-				"VALUES " +
-				"(null, " + o.getOrderType() + ", '" + o.getDate() + "', 0, 0, 0, null);";
+		String insert;
+		if (tableNum == 0) {
+			insert =
+					"INSERT INTO customer_order " +
+							"(CustomerID, OrderType, OrderTime, OrderPrice, OrderCost, OrderComplete, OrderTableNumber) " +
+							"VALUES " +
+							"('" + o.getCustID() + "', '" + o.getOrderType() + "', '" + o.getDate() + "', 0, 0, 0, null);";
+		} else {
+			insert =
+					"INSERT INTO customer_order " +
+							"(CustomerID, OrderType, OrderTime, OrderPrice, OrderCost, OrderComplete, OrderTableNumber) " +
+							"VALUES " +
+							"(null, '" + o.getOrderType() + "', '" + o.getDate() + "', 0, 0, 0," + tableNum + ");";
+		}
+
 
 		Statement insertStatement = conn.createStatement();
 		insertStatement.execute(insert);
@@ -101,6 +113,44 @@ public final class DBNinja {
 		conn.close();
 		return order_id;
 	}
+
+	public static void updateOrder(Order o, String phone) throws SQLException, IOException {
+		ArrayList<Discount> discList = o.getDiscountList();
+		connect_to_db();
+		String update = null;
+
+		Statement input = conn.createStatement();
+
+		//adding discounts to bridge table
+		if (!discList.isEmpty()) {
+			StringBuilder discountBuilder = new StringBuilder();
+			discountBuilder.append("INSERT INTO discount_order (OrderID, DiscountID) VALUES ");
+			for (Discount d: discList) {
+				String dName = d.getDiscountName();
+				discountBuilder.append("((SELECT MAX(OrderID) FROM pizza), '").append(dName).append("')");
+				if (discList.get(discList.size() - 1) == d) {
+					discountBuilder.append(";");
+				} else {
+					discountBuilder.append(",");
+				}
+			}
+			String discountInput = discountBuilder.toString();
+
+			input.execute(discountInput);
+		}
+		String orderType = o.getOrderType();
+		if (orderType.equals(dine_in)) {
+			update = "CALL UPDATEORDERIN();";
+		}
+		if (orderType.equals(delivery) | orderType.equals(pickup)) {
+			update = "CALL UPDATEORDEROUT('" + phone + "');";
+		}
+		input.execute(update);
+
+
+
+		conn.close();
+	}
 	
 	public static void addPizza(Pizza p) throws SQLException, IOException
 	{
@@ -111,29 +161,62 @@ public final class DBNinja {
 		 * instance of topping usage to that bridge table if you have't accounted
 		 * for that somewhere else.
 		 */
-		
-		
-		
-		
-		
+		int orderID = p.getOrderID();
+		ArrayList<Topping> topList = p.getToppings();
+		ArrayList<Discount> discList = p.getDiscounts();
+
+		//adding pizza initially
+		String pizzaInput = "CALL ADDPIZZA(" + p.getOrderID() + ",'" + p.getCrustType() + "','" + p.getSize() + "');";
+		Statement input = conn.createStatement();
+		input.execute(pizzaInput);
+
+		//adding toppings to bridge table
+		if (!topList.isEmpty()) {
+			StringBuilder toppingBuilder = new StringBuilder();
+			toppingBuilder.append("INSERT INTO pizza_topping (PizzaID, ToppingID, PizzaToppingExtra) VALUES ");
+			for (Topping t: topList) {
+				String tName = t.getTopName();
+				toppingBuilder.append("((SELECT MAX(PizzaID) FROM pizza), '").append(tName).append("',");
+				if(t.getDoubled()) {
+					toppingBuilder.append("1)");
+				} else {
+					toppingBuilder.append("0)");
+				}
+				if (topList.get(topList.size() - 1) == t) {
+					toppingBuilder.append(";");
+				} else {
+					toppingBuilder.append(",");
+				}
+			}
+			String toppingInput = toppingBuilder.toString();
+			input.execute(toppingInput);
+		}
+
+		//adding discounts to bridge table
+		if (!discList.isEmpty()) {
+			StringBuilder discountBuilder = new StringBuilder();
+			discountBuilder.append("INSERT INTO discount_pizza (PizzaID, DiscountID) VALUES ");
+			for (Discount d: discList) {
+				String dName = d.getDiscountName();
+				discountBuilder.append("((SELECT MAX(PizzaID) FROM pizza), '").append(dName).append("')");
+				if (discList.get(discList.size() - 1) == d) {
+					discountBuilder.append(";");
+				} else {
+					discountBuilder.append(",");
+				}
+			}
+			String discountInput = discountBuilder.toString();
+
+			input.execute(discountInput);
+		}
+
+		//adding toppings and discount to pizza
+		String update = "CALL UPDATEPIZZATOPPINGS();";
+		input.execute(update);
+
+
+		conn.close();
 		//DO NOT FORGET TO CLOSE YOUR CONNECTION
-	}
-	
-	public static int getMaxPizzaID() throws SQLException, IOException
-	{
-		connect_to_db();
-		/*
-		 * A function I needed because I forgot to make my pizzas auto increment in my DB.
-		 * It goes and fetches the largest PizzaID in the pizza table.
-		 * You wont need this function if you didn't forget to do that
-		 */
-		
-		
-		
-		
-		
-		//DO NOT FORGET TO CLOSE YOUR CONNECTION
-		return -1;
 	}
 	
 	public static void useTopping(Pizza p, Topping t, boolean isDoubled) throws SQLException, IOException //this function will update toppings inventory in SQL and add entities to the Pizzatops table. Pass in the p pizza that is using t topping
@@ -155,44 +238,13 @@ public final class DBNinja {
 		
 		//DO NOT FORGET TO CLOSE YOUR CONNECTION
 	}
-	
-	
-	public static void usePizzaDiscount(Pizza p, Discount d) throws SQLException, IOException
-	{
-		connect_to_db();
-		/*
-		 * Helper function I used to update the pizza-discount bridge table. 
-		 * You might use this, you might not depending on where / how to want to update
-		 * this table
-		 */
-		
-		
-		
-		
-		
-		//DO NOT FORGET TO CLOSE YOUR CONNECTION
-	}
-	
-	public static void useOrderDiscount(Order o, Discount d) throws SQLException, IOException
-	{
-		connect_to_db();
-		/*
-		 * Helper function I used to update the pizza-discount bridge table. 
-		 * You might use this, you might not depending on where / how to want to update
-		 * this table
-		 */
-		
-		
-		
-		
-		
-		//DO NOT FORGET TO CLOSE YOUR CONNECTION
-	}
-	
 
-
+<<<<<<< Updated upstream
 	
 	public static void addCustomer(Customer c) throws SQLException, IOException {
+=======
+	public static int addCustomer(Customer c) throws SQLException, IOException {
+>>>>>>> Stashed changes
 		connect_to_db();
 		/*
 		 * This should add a customer to the database
@@ -290,7 +342,7 @@ public final class DBNinja {
 
 	public static ArrayList<Order> getCurrentOrders() throws SQLException, IOException {
 		connect_to_db();
-		ArrayList<Order> orders = new ArrayList<Order>();
+		ArrayList<Order> orders = new ArrayList<>();
 		/*
 		 * This function should return an arraylist of all of the orders.
 		 * Remember that in Java, we account for supertypes and subtypes
@@ -432,24 +484,62 @@ public final class DBNinja {
 
 	
 	public static ArrayList<Discount> getDiscountList() throws SQLException, IOException {
-		ArrayList<Discount> discs = new ArrayList<Discount>();
+		ArrayList<Discount> discs = new ArrayList<>();
 		connect_to_db();
 		//returns a list of all the discounts.
-		
-		
-		
-		
-		
-		
-		
-		
+		String query = "SELECT * FROM discount";
+		Statement queryStatement = conn.createStatement();
+		ResultSet resultSet = queryStatement.executeQuery(query);
+		int disCounter = 0;
+		while(resultSet.next()) {
+			disCounter ++;
+			Discount temp = new Discount(
+					disCounter,
+					resultSet.getString("DiscountID"),
+					resultSet.getFloat("DiscountAmount"),
+					resultSet.getBoolean("DiscountPercent")
+			);
+			discs.add(temp);
+		}
 		//DO NOT FORGET TO CLOSE YOUR CONNECTION
+		conn.close();
 		return discs;
 	}
 
+	public static ArrayList<Topping> getToppingList() throws SQLException, IOException {
+		ArrayList<Topping> topList = new ArrayList<>();
+		connect_to_db();
+		/*
+		 * return an arraylist of all the toppings. These toppings should print in alphabetical order
+		*/
+
+		String query = "SELECT * FROM topping ORDER BY ToppingID";
+		Statement queryStatement = conn.createStatement();
+		ResultSet resultSet = queryStatement.executeQuery(query);
+
+		int topID = 0;
+		while(resultSet.next()) {
+			topID += 1;
+			Topping temp = new Topping(
+					topID,
+					resultSet.getString("ToppingID"),
+					resultSet.getFloat("ToppingAmountPS"),
+					resultSet.getFloat("ToppingAmountMD"),
+					resultSet.getFloat("ToppingAmountLG"),
+					resultSet.getFloat("ToppingAmountXL"),
+					resultSet.getFloat("ToppingPrice"),
+					resultSet.getFloat("ToppingCost"),
+					0,
+					resultSet.getInt("ToppingInventory")
+			);
+			topList.add(temp);
+		}
+		conn.close();
+		return topList;
+	}
 
 	public static ArrayList<Customer> getCustomerList() throws SQLException, IOException {
-		ArrayList<Customer> custs = new ArrayList<Customer>();
+		ArrayList<Customer> custs = new ArrayList<>();
 		connect_to_db();
 		/*
 		 * return an arrayList of all the customers. These customers should
@@ -466,6 +556,7 @@ public final class DBNinja {
 					resultSet.getString("CustomerLastName"),
 					resultSet.getString("CustomerPhone")
 			);
+			temp.setAddress(resultSet.getString("CustomerAddress"));
 			custs.add(temp);
 		}			
 		
@@ -489,6 +580,14 @@ public final class DBNinja {
 		
 		//DO NOT FORGET TO CLOSE YOUR CONNECTION
 		return -1;
+	}
+
+	public static void updateCustomerAddress(Customer c, String address) throws SQLException, IOException {
+		connect_to_db();
+		String update = "CALL UPDATECUSTOMERADDRESS('" + c.getPhone() + "','" + address + "');";
+		Statement updateStatement = conn.createStatement();
+		updateStatement.executeQuery(update);
+		conn.close();
 	}
 	
 	public static void printToppingPopReport() throws SQLException, IOException

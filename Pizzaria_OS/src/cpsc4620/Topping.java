@@ -21,6 +21,7 @@ public class Topping
 	private double BusPrice;
 	private int MinINVT;
 	private int CurINVT;
+	private boolean isDouble;
 	
 	public Topping(int topID, String topName, double perAMT, double medAMT, double lgAMT, double xLAMT,
 			double custPrice, double busPrice, int minINVT, int curINVT) {
@@ -34,6 +35,14 @@ public class Topping
 		BusPrice = busPrice;
 		MinINVT = minINVT;
 		CurINVT = curINVT;
+	}
+
+	public boolean getDoubled() {
+		return isDouble;
+	}
+
+	public void setDoubled(boolean b) {
+		isDouble = b;
 	}
 
 	public int getTopID() {
