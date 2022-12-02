@@ -324,18 +324,52 @@ public final class DBNinja {
 		 * these orders should print in order from newest to oldest.
 		 */
 
-		String query = "SELECT * FROM customer_order ORDER BY OrderTime ASC;";
+		String query = 	"SELECT " +
+				"customer_order.*, " +
+				"customer.CustomerAddress " +
+				"FROM " +
+				"customer_order " +
+				"LEFT JOIN  " +
+				"customer ON customer_order.CustomerID = customer.CustomerID " +
+				"ORDER BY " +
+				"customer_order.OrderTime ASC;";
 		Statement queryStatement = conn.createStatement();
 		ResultSet resultSet = queryStatement.executeQuery(query);
 		
 		while(resultSet.next()) {
 			switch (resultSet.getString("OrderType")) {
 				case "pickup" :
-					//orders.add(PickupOrder())
+					orders.add(new PickupOrder(
+						resultSet.getInt("OrderID"),
+						resultSet.getInt("CustomerID"),
+						resultSet.getString("OrderTime"),
+							resultSet.getDouble("OrderPrice"),
+							resultSet.getDouble("OrderCost"),
+							0,
+							resultSet.getInt("OrderComplete")
+					));
 					break;
 				case "delivery" :
+					orders.add(new DeliveryOrder(
+							resultSet.getInt("OrderID"),
+							resultSet.getInt("CustomerID"),
+							resultSet.getString("OrderTime"),
+							resultSet.getDouble("OrderPrice"),
+							resultSet.getDouble("OrderCost"),
+							resultSet.getInt("OrderComplete"),
+							resultSet.getString("CustomerAddress")
+					));
 					break;
 				case "dine-in" :
+					orders.add(new DineinOrder(
+							resultSet.getInt("OrderID"),
+							0,
+							resultSet.getString("OrderTime"),
+							resultSet.getDouble("OrderPrice"),
+							resultSet.getDouble("OrderCost"),
+							resultSet.getInt("OrderComplete"),
+							resultSet.getInt("OrderTableNumber")
+					));
 					break;
 			}
 		}			
@@ -344,7 +378,76 @@ public final class DBNinja {
 		conn.close();
 		return(orders);
 	}
-	
+
+	public static ArrayList<Order> getCurrentOrdersRange(String olddate,String newdate) throws SQLException, IOException {
+		connect_to_db();
+		ArrayList<Order> orders = new ArrayList<Order>();
+		/*
+		 * This function should return an arraylist of all of the orders.
+		 * Remember that in Java, we account for supertypes and subtypes
+		 * which means that when we create an arrayList of orders, that really
+		 * means we have an arrayList of dineinOrders, deliveryOrders, and pickupOrders.
+		 *
+		 * Also, like toppings, whenever we print out the orders using menu function 4 and 5
+		 * these orders should print in order from newest to oldest.
+		 */
+
+		String query = 	"SELECT " +
+				"customer_order.*, " +
+				"customer.CustomerAddress " +
+				"FROM " +
+				"customer_order " +
+				"LEFT JOIN  " +
+				"customer ON customer_order.CustomerID = customer.CustomerID " +
+				"WHERE CAST(customer_order.OrderTime AS DATE) BETWEEN '" + olddate + "' AND '" + newdate + "'" +
+				" ORDER BY " +
+				"customer_order.OrderTime ASC;";
+		Statement queryStatement = conn.createStatement();
+		ResultSet resultSet = queryStatement.executeQuery(query);
+
+		while(resultSet.next()) {
+			switch (resultSet.getString("OrderType")) {
+				case "pickup" :
+					orders.add(new PickupOrder(
+							resultSet.getInt("OrderID"),
+							resultSet.getInt("CustomerID"),
+							resultSet.getString("OrderTime"),
+							resultSet.getDouble("OrderPrice"),
+							resultSet.getDouble("OrderCost"),
+							0,
+							resultSet.getInt("OrderComplete")
+					));
+					break;
+				case "delivery" :
+					orders.add(new DeliveryOrder(
+							resultSet.getInt("OrderID"),
+							resultSet.getInt("CustomerID"),
+							resultSet.getString("OrderTime"),
+							resultSet.getDouble("OrderPrice"),
+							resultSet.getDouble("OrderCost"),
+							resultSet.getInt("OrderComplete"),
+							resultSet.getString("CustomerAddress")
+					));
+					break;
+				case "dine-in" :
+					orders.add(new DineinOrder(
+							resultSet.getInt("OrderID"),
+							0,
+							resultSet.getString("OrderTime"),
+							resultSet.getDouble("OrderPrice"),
+							resultSet.getDouble("OrderCost"),
+							resultSet.getInt("OrderComplete"),
+							resultSet.getInt("OrderTableNumber")
+					));
+					break;
+			}
+		}
+
+		//DO NOT FORGET TO CLOSE YOUR CONNECTION
+		conn.close();
+		return(orders);
+	}
+
 	public static ArrayList<Order> sortOrders(ArrayList<Order> list)
 	{
 		/*
@@ -364,18 +467,52 @@ public final class DBNinja {
 		
 	}
 	
-	public static boolean checkDate(int year, int month, int day, String dateOfOrder)
+	public static boolean checkDate(String dateOfOrder)
 	{
 		//Helper function I used to help sort my dates. You likely wont need these
-		
-		
-		
-		
-		
-		
-		
-		
-		return false;
+
+		int year = getYear(dateOfOrder);
+		int month = getMonth(dateOfOrder);
+		int day = getDay(dateOfOrder);
+		boolean returnVal = true;
+		boolean goodDay = true;
+		if(year <= 0) {
+			System.out.println("\tError: Invalid year. Try Again");
+			returnVal = false;
+		}
+
+		if(((month <= 0) || (month > 13))) {
+			returnVal = false;
+			System.out.println("\tError: Invalid month. Try Again");
+		}
+		switch(month) {
+			case 2:
+				if((year % 4) == 0 ) {
+					if((year % 100) == 0) {
+						if((year % 400) == 0) {
+							if(day > 29) {
+								 goodDay = false;
+							}
+						}
+						if(day > 28 && ((year % 400) != 0))  goodDay = false;
+					}
+				} else if(day > 28)  goodDay = false;
+				break;
+			case 4:
+			case 6:
+			case 9:
+			case 11:
+				if(day > 30)  goodDay = false;
+				break;
+			default:
+				if((day > 31)||(day <= 0))  goodDay = false;
+		}
+		if(goodDay == false) {
+			returnVal = false;
+			System.out.println("\tError: Invalid day. Try Again");
+		}
+
+		return returnVal;
 	}
 	
 	
@@ -385,7 +522,7 @@ public final class DBNinja {
 	 */
 	private static int getYear(String date)// assumes date format 'YYYY-MM-DD HH:mm:ss'
 	{
-		return Integer.parseInt(date.substring(0,4));
+		return Integer.parseInt(date.substring(1,4));
 	}
 	private static int getMonth(String date)// assumes date format 'YYYY-MM-DD HH:mm:ss'
 	{
@@ -396,7 +533,16 @@ public final class DBNinja {
 		return Integer.parseInt(date.substring(8, 10));
 	}
 
+	public static boolean compDates(String date1, String date2){
+		int year1 = getYear(date1),month1 = getMonth(date1),day1 = getDay(date1);
+		int year2 = getYear(date1),month2 = getMonth(date1),day2 = getDay(date1);
 
+		if(year1>year2){
+			return false;
+		} else if(month1>month2){
+			return false;
+		} else
+	}
 
 	
 	
@@ -425,18 +571,22 @@ public final class DBNinja {
 		 *so I'll keep the implementation here. You're welcome to change
 		 *how the order print statements work so that you don't need this function.
 		 */
-		connect_to_db();
-		String ret = "";
-		String query = "SELECT CustomerFirstName, CustomerLastName FROM customer WHERE CustomerID=" + CustID + ";";
-		Statement stmt = conn.createStatement();
-		ResultSet rset = stmt.executeQuery(query);
-		
-		while(rset.next())
-		{
-			ret = rset.getString(1) + " " + rset.getString(2);
+		if(CustID == 0){
+			return ("Not recorded because of order type");
+		}else{
+			connect_to_db();
+			String ret = "";
+			String query = "SELECT CustomerFirstName, CustomerLastName FROM customer WHERE CustomerID=" + CustID + ";";
+			Statement stmt = conn.createStatement();
+			ResultSet rset = stmt.executeQuery(query);
+
+			while(rset.next())
+			{
+				ret = rset.getString(1) + " " + rset.getString(2);
+			}
+			conn.close();
+			return ret;
 		}
-		conn.close();
-		return ret;
 	}
 	
 	public static double getBaseBusPrice(String size, String crust) throws SQLException, IOException {

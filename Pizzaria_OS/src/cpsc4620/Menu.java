@@ -136,6 +136,32 @@ public class Menu {
 		}while(repeat);
 		return(temp);
 	}
+
+	public static String getDate(String prompt){
+		String temp = null;
+		boolean repeat = true;
+		do{
+			try{
+				System.out.print(prompt);
+				while (!(reader.hasNext("\\d{4}-\\d{2}-\\d{2}"))) {
+					System.out.println("\tError: Invalid Input. Check Your Formatting And Try Again.");
+					System.out.print(prompt);
+					reader.nextLine();
+				}
+				temp = reader.nextLine();
+
+				if(DBNinja.checkDate(temp)){
+					repeat = false;
+					System.out.println();
+				}
+			}catch(NoSuchElementException e) {
+				System.out.println("\tError: No input. Try again.");
+			}
+
+		}while(repeat);
+		return(temp);
+	}
+
 	// allow for a new order to be placed
 	public static void EnterOrder() throws SQLException, IOException 
 	{
@@ -377,10 +403,28 @@ public class Menu {
 		System.out.println("1. Display all orders");
 		System.out.println("2. Display all orders since a specific date");
 		int choice = getIntRange(1,2,"Enter the Corresponding Number: ");
+		System.out.println();
 		if(choice == 1) {
-
+			System.out.println("OrderID         |Date Placed  \t\t\t\t\t    |Customer \t\t" +
+					"*The Order Details will be the " +
+					"tabbed line after the customer*");
+			System.out.println("----------------------------------------------------------------");
+			ArrayList<Order> orders = DBNinja.getCurrentOrders();
+			for(Order o: orders){
+				System.out.println(o.toString()+"\n");
+			}
 		} else {
-			System.out.println("test");
+			String oldDate = getDate("Enter the oldest date to display (Example: YYYY-MM-DD): ");
+
+			String newDate = getDate("Enter the newest date to display (Example: YYYY-MM-DD): ");
+			System.out.println("OrderID         |Date Placed  \t\t\t\t\t    |Customer \t\t" +
+					"*The Order Details will be the " +
+					"tabbed line after the customer*");
+			System.out.println("----------------------------------------------------------------");
+			ArrayList<Order> orders = DBNinja.getCurrentOrdersRange(oldDate,newDate);
+			for(Order o: orders){
+				System.out.println(o.toString()+"\n");
+			}
 		}
 
 	}

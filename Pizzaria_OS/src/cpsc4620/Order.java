@@ -1,7 +1,9 @@
 package cpsc4620;
 import java.io.IOException;
 import java.sql.SQLException;
+import java.text.Format;
 import java.util.ArrayList;
+import java.util.Formatter;
 
 public class Order 
 {
@@ -149,12 +151,18 @@ public class Order
 
 	
 	//two print statements because one is slightly easier to read. If you can make pretty print statements, you're absolutely welcome to change these.
+
 	@Override
 	public String toString() {
 		try 
 		{
-			return "OrderID=" + OrderID + " | Date Placed= " + this.Date + " | For customer: " + DBNinja.getCustomerName(CustID) + " | OrderType= " + OrderType + ", Placed on: " + Date
-					+ " | CustPrice= " + CustPrice + ", BusPrice= " + BusPrice;
+			String cusName = DBNinja.getCustomerName(CustID);
+			while(cusName.length() < 25){cusName = cusName + " ";}
+			String OrderIDST = Integer.toString(OrderID);
+			while(OrderIDST.length() < 6){OrderIDST = OrderIDST + " ";}
+
+			return "OrderID = " + OrderIDST + "|Date Placed = " + this.Date + "\t| For customer: " + cusName +
+					"\n\tOrderType= " + OrderType + " | CustPrice= " + CustPrice + ", BusPrice= " + BusPrice;
 		} 
 		catch (SQLException | IOException e)
 		{
